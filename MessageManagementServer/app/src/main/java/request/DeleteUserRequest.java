@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName;
 import response.DeleteUserResponse;
 import response.Response;
 import state.State;
+import system.REST;
 
 import javax.inject.Inject;
 
@@ -30,6 +31,7 @@ public class DeleteUserRequest implements Request {
      * @param userId the user id
      */
     public DeleteUserRequest(String userId) {
+        this.state = REST.getState();
         this.userId = userId;
     }
 

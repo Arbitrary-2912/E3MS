@@ -3,6 +3,7 @@ package request;
 import com.google.gson.annotations.SerializedName;
 import response.Response;
 import state.State;
+import system.REST;
 import system.User;
 
 import javax.inject.Inject;
@@ -21,6 +22,7 @@ public class AddUserRequest implements Request {
      * Constructs an AddUserRequest object.
      */
     public AddUserRequest() {
+        this.state = REST.getState();
     }
 
     /**

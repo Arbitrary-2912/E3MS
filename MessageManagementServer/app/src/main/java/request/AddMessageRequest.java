@@ -5,6 +5,7 @@ import system.Message;
 import response.AddMessageResponse;
 import response.Response;
 import state.State;
+import system.REST;
 
 import javax.inject.Inject;
 
@@ -22,6 +23,7 @@ public class AddMessageRequest implements Request {
      * Constructs an AddMessageRequest object.
      */
     public AddMessageRequest() {
+        this.state = REST.getState();
     }
 
     /**

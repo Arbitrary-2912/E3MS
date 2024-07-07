@@ -3,6 +3,7 @@ package request;
 import com.google.gson.annotations.SerializedName;
 import response.Response;
 import state.State;
+import system.REST;
 
 import javax.inject.Inject;
 
@@ -29,6 +30,7 @@ public class DeleteMessageRequest implements Request {
      * @param messageId the message id
      */
     public DeleteMessageRequest(String messageId) {
+        this.state = REST.getState();
         this.messageId = messageId;
     }
 
