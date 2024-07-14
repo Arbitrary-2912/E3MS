@@ -5,7 +5,6 @@ import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import state.State;
 import system.Credentials;
-import system.REST;
 
 /**
  * Represents the response to an update credentials request.
