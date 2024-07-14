@@ -274,6 +274,38 @@ public class State {
     }
 
     /**
+     * Update the credentials of a user.
+     * @param userId The id of the user.
+     * @param credentials The new credentials.
+     */
+    public void updateCredentials(String userId, Credentials credentials) {
+        User user = activeUsers.get(userId);
+        if (user != null) {
+            if (Config.DB_ENABLED) {
+                try {
+                    String sql = "UPDATE users SET username = ?, password = ?, identitykey = ?, signedprekey = ?, prekeysignature = ?, otpkey1 = ?, otpkey2 = ?, otpkey3 = ?, otpkey4 = ? WHERE id = ?";
+                    PreparedStatement statement = dbConnection.prepareStatement(sql);
+                    statement.setString(1, credentials.getUsername());
+                    statement.setString(2, credentials.getPassword());
+                    statement.setString(3, credentials.getIdentityKey());
+                    statement.setString(4, credentials.getSignedPreKey());
+                    statement.setString(5, credentials.getPreKeySignature());
+                    statement.setString(6, credentials.getOneTimePreKeys().get(0));
+                    statement.setString(7, credentials.getOneTimePreKeys().get(1));
+                    statement.setString(8, credentials.getOneTimePreKeys().get(2));
+                    statement.setString(9, credentials.getOneTimePreKeys().get(3));
+                    statement.setString(10, userId);
+                    statement.executeUpdate();
+                } catch (SQLException e) {
+                    log.error("Failed to update credentials for user " + userId + " : " + e.getMessage());
+                }
+            }
+            user.setCredentials(credentials);
+            activeUsers.put(userId, user);
+        }
+    }
+
+    /**
      * Close the connections.
      *
      * @throws SQLException If an error occurs while closing the database connection.

@@ -21,9 +21,9 @@ public class UpdateCredentialsResponse implements Response {
      * @param userId User ID to update credentials
      * @param credentials New credentials
      */
-    public UpdateCredentialsResponse(String userId, Credentials credentials) throws Exception {
+    public UpdateCredentialsResponse(String userId, Credentials credentials) {
         try {
-            state.getUserById(userId).setCredentials(credentials);
+            state.updateCredentials(userId, credentials);
             result = true;
         } catch (Exception e) {
             result = false;
