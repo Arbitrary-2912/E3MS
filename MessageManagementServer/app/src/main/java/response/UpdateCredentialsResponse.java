@@ -4,40 +4,39 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import state.State;
+import system.Credentials;
 import system.REST;
 
 /**
- * Represents the response to a verify password request.
+ * Represents the response to an update credentials request.
  */
-public class VerifyPasswordResponse implements Response {
-    private boolean result = false;
-    private final Gson gson = new Gson();
+public class UpdateCredentialsResponse implements Response {
     @Inject
     private State state;
+    private final Gson gson = new Gson();
+    private boolean result;
 
     /**
-     * Constructs a VerifyPasswordResponse object.
-     *
-     * @param userId   the user's id
-     * @param password the user's password
+     * Constructs an UpdateCredentialsResponse object.
+     * @param userId User ID to update credentials
+     * @param credentials New credentials
      */
-    public VerifyPasswordResponse(String userId, String password) {
+    public UpdateCredentialsResponse(String userId, Credentials credentials) throws Exception {
         try {
-            this.result = state.getUserById(userId).getCredentials().getPassword().equals(password);
+            state.getUserById(userId).setCredentials(credentials);
+            result = true;
         } catch (Exception e) {
-            System.out.println("Error: " + e);
+            result = false;
         }
     }
 
     /**
      * Gets the status of the response.
-     *
      * @return the status of the response
      */
-    @SerializedName("status")
     @Override
     public String status() {
-        return result ? "200" : "403";
+        return "200";
     }
 
     /**

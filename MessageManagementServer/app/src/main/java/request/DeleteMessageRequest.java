@@ -1,16 +1,18 @@
 package request;
 
 import com.google.gson.annotations.SerializedName;
+import com.google.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import response.Response;
 import state.State;
 import system.REST;
-
-import javax.inject.Inject;
 
 /**
  * Represents a delete message request.
  */
 public class DeleteMessageRequest implements Request {
+    private static final Logger log = LoggerFactory.getLogger(DeleteMessageRequest.class);
     @Inject
     private State state;
     @SerializedName("messageId")
@@ -30,7 +32,6 @@ public class DeleteMessageRequest implements Request {
      * @param messageId the message id
      */
     public DeleteMessageRequest(String messageId) {
-        this.state = REST.getState();
         this.messageId = messageId;
     }
 
@@ -78,10 +79,11 @@ public class DeleteMessageRequest implements Request {
      */
     public void execute() {
         try {
-            success = true;
             state.removeMessage(state.getMessageById(messageId));
+            success = true;
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error("Failed to delete message {}: {}", messageId, e.getMessage());
+            success = false;
         }
     }
 }

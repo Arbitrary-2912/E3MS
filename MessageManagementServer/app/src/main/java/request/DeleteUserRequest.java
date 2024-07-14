@@ -1,17 +1,19 @@
 package request;
 
 import com.google.gson.annotations.SerializedName;
+import com.google.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import response.DeleteUserResponse;
 import response.Response;
 import state.State;
 import system.REST;
 
-import javax.inject.Inject;
-
 /**
  * Represents a delete user request.
  */
 public class DeleteUserRequest implements Request {
+    private static final Logger log = LoggerFactory.getLogger(DeleteUserRequest.class);
     @Inject
     private State state;
     @SerializedName("userId")
@@ -31,7 +33,6 @@ public class DeleteUserRequest implements Request {
      * @param userId the user id
      */
     public DeleteUserRequest(String userId) {
-        this.state = REST.getState();
         this.userId = userId;
     }
 
@@ -82,7 +83,8 @@ public class DeleteUserRequest implements Request {
             state.removeUser(state.getUserById(userId));
             success = true;
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error("Error removing user {} : {}", userId, e.getMessage());
+            success = false;
         }
     }
 }

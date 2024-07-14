@@ -3,6 +3,8 @@ package system;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import state.Handler;
 import state.State;
 
@@ -26,6 +28,7 @@ import state.State;
 
 @Singleton
 public class REST {
+    private static final Logger log = LoggerFactory.getLogger(REST.class);
     private static State state;
     private static Handler handler;
 
@@ -43,7 +46,7 @@ public class REST {
      * @param args The command line arguments.
      */
     public static void main(String[] args) {
-        System.out.println("Starting REST server");
+        log.info("Starting REST server");
 
         Injector injector = Guice.createInjector(new AppModule());
 
@@ -51,12 +54,9 @@ public class REST {
         handler = injector.getInstance(Handler.class);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Shutting down REST server");
+            log.info("Shutting down REST server");
+            state = null;
             handler.stop();
         }));
-    }
-
-    public static State getState() {
-        return state;
     }
 }

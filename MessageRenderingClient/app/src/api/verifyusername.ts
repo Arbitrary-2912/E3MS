@@ -1,17 +1,15 @@
-const axios = require('axios');
+import axios from "axios";
 
-const postUsername = (username, password) => {
+export const verifyUsername = (username: string, password: string) => {
     axios.post('http://localhost:8080/', {
         command: "verifyPassword",
         userId: username,
         password: password
     })
-        .then((response) => {
+        .then((response: any) => {
             console.log(response.data);
         })
-        .catch((error) => {
+        .catch((error: any) => {
             console.error(error);
         });
 };
-
-postUsername("username", "password");

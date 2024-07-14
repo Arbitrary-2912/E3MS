@@ -1,41 +1,31 @@
-import { useState } from 'react';
+import {useState} from 'react';
 import {sha3_512} from "js-sha3";
-import axios from 'axios';
+import {verifyUsername} from "./api/verifyusername.ts";
 import './App.css'
 
 function App() {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [currentUsername, setCurrentUsername] = useState('');
-    const [currentPassword, setCurrentPassword] = useState('');
+    const [username, setDisplayUsername] = useState('');
+    const [password, setDisplayPassword] = useState('');
+    const [currentUsername, setLocalUsername] = useState('');
+    const [currentPassword, setLocalPassword] = useState('');
     const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setUsername(event.target.value);
+        setDisplayUsername(event.target.value);
     }
 
     const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setPassword(event.target.value);
+        setDisplayPassword(event.target.value);
     }
 
     const handleSubmit = () => {
-        setCurrentUsername(username);
-        setCurrentPassword(password);
+        setLocalUsername(username);
+        setLocalPassword(password);
 
-        setUsername('');
-        setPassword('');
+        setDisplayUsername('');
+        setDisplayPassword('');
 
         console.log("Username: " + username + " Password: " + password)
-        axios.post('http://localhost:8080/', {
-            command: "verifyPassword",
-            userId: "username",
-            password: "password"
-        }).then((response) => {
-            console.log(response.data);
-        }).catch((error) => {
-            console.error(error);
-        });
+        verifyUsername(username, password);
     };
-
-
 
     return (
         <div>

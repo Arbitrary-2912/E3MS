@@ -1,30 +1,25 @@
 package request;
 
 import com.google.gson.annotations.SerializedName;
-import system.Message;
+import com.google.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import response.AddMessageResponse;
 import response.Response;
 import state.State;
+import system.Message;
 import system.REST;
-
-import javax.inject.Inject;
 
 /**
  * Represents an add message request.
  */
 public class AddMessageRequest implements Request {
+    private static final Logger log = LoggerFactory.getLogger(AddMessageRequest.class);
     @Inject
     private State state;
     @SerializedName("message")
     private Message message;
     private boolean success = false;
-
-    /**
-     * Constructs an AddMessageRequest object.
-     */
-    public AddMessageRequest() {
-        this.state = REST.getState();
-    }
 
     /**
      * Constructs an AddMessageRequest object.
@@ -82,7 +77,8 @@ public class AddMessageRequest implements Request {
             state.addMessage(message);
             success = true;
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error("Failed to add message {}: {}", message, e.getMessage());
+            success = false;
         }
     }
 }

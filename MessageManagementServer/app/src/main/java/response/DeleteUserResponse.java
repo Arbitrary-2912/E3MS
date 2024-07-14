@@ -6,6 +6,11 @@ package response;
 public class DeleteUserResponse implements Response {
     private final boolean result;
 
+    /**
+     * Constructs a DeleteUserResponse object.
+     *
+     * @param result the result of the request
+     */
     public DeleteUserResponse(boolean result) {
         this.result = result;
     }

@@ -2,10 +2,11 @@ package response;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.google.inject.Inject;
 import state.State;
-import system.REST;
+import system.Message;
 
-import javax.inject.Inject;
+import java.util.List;
 
 /**
  * Represents the response to a get recent messages request.
@@ -14,10 +15,7 @@ public class GetRecentMessagesResponse implements Response {
     @Inject
     private State state;
     private final Gson gson = new Gson();
-
-    public GetRecentMessagesResponse() {
-        state = REST.getState();
-    }
+    private final Integer recencyBuffer = 10;
 
     /**
      * Constructs a GetRecentMessagesResponse object.
@@ -36,7 +34,7 @@ public class GetRecentMessagesResponse implements Response {
     @SerializedName("response")
     @Override
     public String response() {
-        var result = state.getMessages();
+        List<Message> result = state.getMessages().subList(Math.max(0, state.getMessages().size() - recencyBuffer), state.getMessages().size());
         return gson.toJson(result);
     }
 }
