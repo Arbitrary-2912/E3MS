@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import state.State;
+import system.REST;
 
 /**
  * Represents the response to a get users request.
@@ -12,6 +13,10 @@ public class GetUsersResponse implements Response {
     @Inject
     private State state;
     private final Gson gson = new Gson();
+
+    public GetUsersResponse() {
+        state = REST.getState();
+    }
 
     /**
      * Constructs a GetUsersResponse object.

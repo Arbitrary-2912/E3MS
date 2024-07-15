@@ -3,12 +3,25 @@ package request;
 import com.google.gson.annotations.SerializedName;
 import response.GetRecentMessagesResponse;
 import response.Response;
+import system.Message;
+import system.REST;
+import system.User;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Represents a get recent messages request.
  */
 public class GetRecentMessagesRequest implements Request {
+    private static int RECENCY_BUFFER = 10;
+    private User user;
+    private List<Message> messages;
 
+    public GetRecentMessagesRequest(User user) {
+        this.user = user;
+    }
     /**
      * Constructs a GetRecentMessagesRequest object.
      */
@@ -25,7 +38,7 @@ public class GetRecentMessagesRequest implements Request {
      */
     @Override
     public Response getResponse() {
-        return new GetRecentMessagesResponse();
+        return new GetRecentMessagesResponse(messages);
     }
 
     /**
@@ -33,6 +46,10 @@ public class GetRecentMessagesRequest implements Request {
      */
     @Override
     public void execute() {
-        return;
+        try {
+            messages = REST.getState().getMessagesByReceiver(user).subList(Math.max(0, REST.getState().getMessagesByReceiver(user).size() - RECENCY_BUFFER), REST.getState().getMessagesByReceiver(user).size());
+        } catch (Exception e) {
+            messages = Collections.emptyList();
+        }
     }
 }

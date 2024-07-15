@@ -8,7 +8,7 @@ export class Message {
     }
 }
 
-class MetaData {
+export class MetaData {
     id: string;
     sender: string;
     receiver: string[];
@@ -22,7 +22,7 @@ class MetaData {
     }
 }
 
-class MessageData {
+export class MessageData {
     message: string;
 
     constructor(message: string) {

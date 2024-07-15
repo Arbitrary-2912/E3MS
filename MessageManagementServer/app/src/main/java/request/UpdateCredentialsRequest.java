@@ -18,6 +18,11 @@ public class UpdateCredentialsRequest implements Request {
     @SerializedName("credentials")
     private Credentials credentials;
 
+    public UpdateCredentialsRequest(String userId, Credentials credentials) {
+        this.userId = userId;
+        this.credentials = credentials;
+    }
+
     /**
      * Gets the command of the request.
      *

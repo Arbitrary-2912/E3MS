@@ -12,13 +12,12 @@ public class VerifyPasswordRequest implements Request {
     private String userId;
     @SerializedName("password")
     private String password;
-    private final Response response;
+    private Response response;
 
     /**
      * Constructs a VerifyPasswordRequest object.
      */
     public VerifyPasswordRequest() {
-        this(null, null);
     }
 
     /**
@@ -56,5 +55,37 @@ public class VerifyPasswordRequest implements Request {
      */
     public void execute() {
         return;
+    }
+
+    /**
+     * Gets the user id.
+     * @return the user id
+     */
+    public String getUserId() {
+        return userId;
+    }
+
+    /**
+     * Sets the user id.
+     * @param userId the user id
+     */
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    /**
+     * Gets the password.
+     * @return the password
+     */
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * Sets the password.
+     * @param password the password
+     */
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

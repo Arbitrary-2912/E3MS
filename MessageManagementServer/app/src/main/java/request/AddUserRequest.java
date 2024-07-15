@@ -26,6 +26,7 @@ public class AddUserRequest implements Request {
      * @param user the user
      */
     public AddUserRequest(User user) {
+        state = REST.getState();
         this.user = user;
     }
 

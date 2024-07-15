@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import state.State;
 import system.Credentials;
+import system.REST;
 
 /**
  * Represents the response to an update credentials request.
@@ -21,6 +22,7 @@ public class UpdateCredentialsResponse implements Response {
      * @param credentials New credentials
      */
     public UpdateCredentialsResponse(String userId, Credentials credentials) {
+        this.state = REST.getState();
         try {
             state.updateCredentials(userId, credentials);
             result = true;
