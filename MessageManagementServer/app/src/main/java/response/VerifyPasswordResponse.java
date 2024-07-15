@@ -22,6 +22,7 @@ public class VerifyPasswordResponse implements Response {
      * @param password the user's password
      */
     public VerifyPasswordResponse(String userId, String password) {
+        this.state = REST.getState();
         try {
             this.result = state.getUserById(userId).getCredentials().getPassword().equals(password);
         } catch (Exception e) {

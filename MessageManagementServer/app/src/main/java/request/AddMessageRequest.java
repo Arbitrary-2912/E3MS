@@ -27,6 +27,7 @@ public class AddMessageRequest implements Request {
      * @param message the message
      */
     public AddMessageRequest(Message message) {
+        this.state = REST.getState();
         this.message = message;
     }
 

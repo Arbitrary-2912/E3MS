@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import state.State;
 import system.Message;
+import system.REST;
 
 import java.util.List;
 
@@ -16,6 +17,10 @@ public class GetRecentMessagesResponse implements Response {
     private State state;
     private final Gson gson = new Gson();
     private final Integer recencyBuffer = 10;
+
+    public GetRecentMessagesResponse() {
+        state = REST.getState();
+    }
 
     /**
      * Constructs a GetRecentMessagesResponse object.

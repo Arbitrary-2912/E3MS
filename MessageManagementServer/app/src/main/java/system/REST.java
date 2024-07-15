@@ -59,4 +59,12 @@ public class REST {
             handler.stop();
         }));
     }
+
+    /**
+     * Gets the state of the REST server.
+     * @return the state of the REST server
+     */
+    public static State getState() {
+        return state;
+    }
 }
