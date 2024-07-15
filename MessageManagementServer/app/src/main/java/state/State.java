@@ -54,6 +54,11 @@ public class State {
         // Initialize active maps
         activeUsers = new HashMap<>();
         activeMessages = new HashMap<>();
+
+        activeMessages.put("1", new Message(
+                new Message.MetaData("1", "1", List.of("2"), "2021-10-10 10:10:10"),
+                new Message.MessageData("Hello, World!")
+        ));
     }
 
     /**

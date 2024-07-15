@@ -9,6 +9,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import request.Request;
+import request.VerifyPasswordRequest;
 import response.Response;
 import system.Config;
 
@@ -124,7 +125,7 @@ public class Handler {
             case "getRecentMessages" -> gson.fromJson(obj, request.GetRecentMessagesRequest.class);
             case "deleteMessage" -> gson.fromJson(obj, request.DeleteMessageRequest.class);
             case "updateCredentials" -> gson.fromJson(obj, request.UpdateCredentialsRequest.class);
-            case "verifyPassword" -> gson.fromJson(obj, request.VerifyPasswordRequest.class);
+            case "verifyPassword" -> new VerifyPasswordRequest(obj.get("userId").getAsString(), obj.get("password").getAsString());
             default -> {
                 log.info("Command not recognized: " + obj.get("command").getAsString());
                 yield null;
