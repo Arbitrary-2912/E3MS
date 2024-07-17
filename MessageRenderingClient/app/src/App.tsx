@@ -4,6 +4,7 @@ import { verifyUsername } from './api/verifyusername';
 import { getRecentMessages } from './api/getrecentmessages';
 import './App.css';
 import { Message, MetaData, MessageData } from './data/message.ts';
+import {addMessage} from "./api/addmessage.ts";
 
 function App() {
     const [username, setDisplayUsername] = useState<string>('');
@@ -13,24 +14,22 @@ function App() {
     const [message, setMessage] = useState<string>('');
     const [messages, setMessages] = useState<Message[]>([]);
 
-    useEffect(() => {
-        const fetchMessages = async () => {
-            const response = await getRecentMessages();
-            console.log("response: ", response)
-            const jsonResponse = JSON.parse(response);
-            console.log(jsonResponse.response);
-        }
-
-
-
-        fetchMessages();
-
-        const intervalId = setInterval(fetchMessages, 5000); // Poll every 5 seconds
-
-        return () => clearInterval(intervalId); // Cleanup interval on component unmount
-    }, []);
-
-
+    // useEffect(() => {
+    //     const fetchMessages = async () => {
+    //         try {
+    //             const response = await getRecentMessages();
+    //             console.log("Received messages: ", response);
+    //             setMessages(response); // Update the state with the received messages
+    //         } catch (error) {
+    //             console.error("Error fetching messages: ", error);
+    //         }
+    //     };
+    //
+    //     fetchMessages();
+    //     const intervalId = setInterval(fetchMessages, 5000); // Poll every 5 seconds
+    //
+    //     return () => clearInterval(intervalId); // Cleanup interval on component unmount
+    // }, []);
 
     const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
         setDisplayUsername(event.target.value);
@@ -60,7 +59,7 @@ function App() {
 
         const newMessage = new Message(
             new MetaData(
-                Math.random().toString(36).substr(2, 9), // generate a random id
+                Math.random().toString(36).substring(7),
                 currentUsername,
                 [],
                 new Date().toLocaleString()
@@ -70,6 +69,7 @@ function App() {
 
         setMessages([...messages, newMessage]);
         setMessage('');
+        addMessage(newMessage);
     };
 
     return (

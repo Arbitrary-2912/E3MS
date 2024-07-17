@@ -1,6 +1,7 @@
 package state;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -8,16 +9,19 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import request.AddMessageRequest;
 import request.Request;
 import request.VerifyPasswordRequest;
 import response.Response;
 import system.Config;
+import system.Message;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 /**
  * Class that publishes messages to a RabbitMQ queue.
@@ -85,6 +89,7 @@ public class Handler {
 
                     Request message = convertStringToMessage(payload);
                     if (message != null) {
+                        message.execute();
                         Response response = message.getResponse();
                         String jsonResponse = convertMessageToString(response);
 
@@ -121,7 +126,31 @@ public class Handler {
             case "addUser" -> gson.fromJson(obj, request.AddUserRequest.class);
             case "getUsers" -> gson.fromJson(obj, request.GetUsersRequest.class);
             case "deleteUser" -> gson.fromJson(obj, request.DeleteUserRequest.class);
-            case "addMessage" -> gson.fromJson(obj, request.AddMessageRequest.class);
+            case "addMessage" -> {
+                JsonObject messageContainer = (JsonObject) obj.get("message");
+                JsonObject metaDataContainer = (JsonObject) messageContainer.get("metaData");
+                JsonObject messageDataContainer = (JsonObject) messageContainer.get("messageData");
+
+                JsonArray receiverArray = (JsonArray) metaDataContainer.get("receiver");
+                ArrayList<String> receiverList = new ArrayList<>();
+                for (int i = 0; i < receiverArray.size(); i++) {
+                    receiverList.add(receiverArray.get(i).getAsString());
+                }
+
+                yield new AddMessageRequest(
+                    new Message (
+                        new Message.MetaData(
+                                metaDataContainer.get("id").getAsString(),
+                                metaDataContainer.get("sender").getAsString(),
+                                receiverList,
+                                metaDataContainer.get("timestamp").getAsString()
+                        ),
+                        new Message.MessageData(
+                                messageDataContainer.get("message").getAsString()
+                        )
+                    )
+                );
+            }
             case "getRecentMessages" -> gson.fromJson(obj, request.GetRecentMessagesRequest.class);
             case "deleteMessage" -> gson.fromJson(obj, request.DeleteMessageRequest.class);
             case "updateCredentials" -> gson.fromJson(obj, request.UpdateCredentialsRequest.class);
