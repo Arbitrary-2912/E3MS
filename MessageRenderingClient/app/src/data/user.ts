@@ -10,12 +10,20 @@ export class User {
     }
 }
 
-class Credentials {
+export class Credentials {
     username: string;
     password: string;
+    identityKey: string;
+    signedPreKey: string;
+    preKeySignature: string;
+    oneTimePreKeys: string[];
 
-    constructor(username: string, password: string) {
+    constructor(username: string, password: string, identityKey: string, signedPreKey: string, preKeySignature: string, oneTimePreKeys: string[]) {
         this.username = username;
         this.password = password;
+        this.identityKey = identityKey;
+        this.signedPreKey = signedPreKey;
+        this.preKeySignature = preKeySignature;
+        this.oneTimePreKeys = oneTimePreKeys;
     }
 }

@@ -21,7 +21,7 @@ public class GetRecentMessagesResponse implements Response {
     }
 
     public GetRecentMessagesResponse() {
-        state = REST.getState();
+        this.messages = null;
     }
 
     /**

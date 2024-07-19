@@ -1,9 +1,11 @@
 import axios from "axios";
 import {Message, MessageData, MetaData} from "../data/message.ts";
+import {User} from "../data/user.ts";
 
-export const getRecentMessages = async () : Promise<Message[]> => {
+export const getRecentMessages = async (user: User) : Promise<Message[]> => {
     return axios.post('http://localhost:8080/', {
-        command: "getRecentMessages"
+        command: "getRecentMessages",
+        user: user
     })
         .then((response: any) => {
             const messageArray = JSON.parse(response.data.response);
