@@ -47,7 +47,7 @@ public class GetRecentMessagesRequest implements Request {
     @Override
     public void execute() {
         try {
-            messages = REST.getState().getMessagesByReceiver(user).subList(Math.max(0, REST.getState().getMessagesByReceiver(user).size() - RECENCY_BUFFER), REST.getState().getMessagesByReceiver(user).size());
+            messages = REST.getState().getRecentMessages(user, RECENCY_BUFFER);
         } catch (Exception e) {
             messages = Collections.emptyList();
         }

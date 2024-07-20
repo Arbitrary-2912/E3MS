@@ -2,12 +2,15 @@ package system;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 
 /**
  * Class that represents a message.
  */
-public class Message {
+public class Message implements Comparable<Message> {
     @SerializedName("metaData")
     private MetaData metaData;
     @SerializedName("messageData")
@@ -223,4 +226,12 @@ public class Message {
             return message.hashCode();
         }
     }
+
+    public int compareTo(Message o) {
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+        LocalDateTime thisTimestamp = LocalDateTime.parse(this.metaData.getTimestamp(), formatter);
+        LocalDateTime otherTimestamp = LocalDateTime.parse(o.metaData.getTimestamp(), formatter);
+        return thisTimestamp.compareTo(otherTimestamp);
+    }
+
 }
