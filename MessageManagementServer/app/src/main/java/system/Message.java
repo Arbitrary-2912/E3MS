@@ -228,7 +228,7 @@ public class Message implements Comparable<Message> {
     }
 
     public int compareTo(Message o) {
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy, h:mm:ss a");
         LocalDateTime thisTimestamp = LocalDateTime.parse(this.metaData.getTimestamp(), formatter);
         LocalDateTime otherTimestamp = LocalDateTime.parse(o.metaData.getTimestamp(), formatter);
         return thisTimestamp.compareTo(otherTimestamp);
