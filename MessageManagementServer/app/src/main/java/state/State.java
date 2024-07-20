@@ -14,10 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Class that holds the state of the application.
@@ -44,21 +41,15 @@ public class State {
                 statement.execute("CREATE DATABASE IF NOT EXISTS e3ms;");
                 statement.execute("USE e3ms;");
                 statement.execute("CREATE TABLE IF NOT EXISTS users (id VARCHAR(255), name VARCHAR(255), username VARCHAR(255), password VARCHAR(255)), identitykey VARCHAR(255), signedprekey VARCHAR(255), prekeysignature VARCHAR(255), otpkey1 VARCHAR(255), otpkey2 VARCHAR(255), otpkey3 VARCHAR(255), otpkey4 VARCHAR(255);");
-                statement.execute("CREATE TABLE IF NOT EXISTS messages (id VARCHAR(255), sender VARCHAR(255), receiver VARCHAR(255), timestamp VARCHAR(255), message VARCHAR(255));");
+                statement.execute("CREATE TABLE IF NOT EXISTS messages (id VARCHAR(255), sender VARCHAR(255), receiver VARCHAR(255), timestamp VARCHAR(255), message VARCHAR(7500));");
                 loadState(dbConnection.createStatement());
             } catch (SQLException e) {
                 log.error("Failed to connect to database " + e.getMessage());
             }
+        } else {
+            activeUsers = new HashMap<>();
+            activeMessages = new HashMap<>();
         }
-
-        // Initialize active maps
-        activeUsers = new HashMap<>();
-        activeMessages = new HashMap<>();
-
-        activeMessages.put("1", new Message(
-                new Message.MetaData("1", "1", List.of("2"), "2021-10-10 10:10:10"),
-                new Message.MessageData("Hello, World!")
-        ));
     }
 
     /**
@@ -197,6 +188,30 @@ public class State {
      * @return The message with the given sender.
      */
     public List<Message> getMessagesBySender(User sender) {
+        if (Config.DB_ENABLED) {
+            String sql = "SELECT id, sender, receiver, timestamp, message FROM messages WHERE sender = ? ORDER BY timestamp DESC";
+            try {
+                PreparedStatement statement = dbConnection.prepareStatement(sql);
+                statement.setString(1, sender.getId());
+                ResultSet resultSet = statement.executeQuery();
+                List<Message> messages = new ArrayList<>();
+                while (resultSet.next()) {
+                    Message message = new Message(
+                            new Message.MetaData(
+                                    resultSet.getString("id"),
+                                    resultSet.getString("sender"),
+                                    List.of(resultSet.getString("receiver").split(",")),
+                                    resultSet.getString("timestamp")
+                            ),
+                            new Message.MessageData(resultSet.getString("message"))
+                    );
+                    messages.add(message);
+                }
+                return messages;
+            } catch (SQLException e) {
+                log.error("Failed to get messages by sender " + e.getMessage());
+            }
+        }
         List<Message> messages = new ArrayList<>();
         for (Message message : activeMessages.values()) {
             if (message.getMetaData().getSender().equals(sender.getId())) {
@@ -213,6 +228,30 @@ public class State {
      * @return The message with the given receiver.
      */
     public List<Message> getMessagesByReceiver(User receiver) {
+        if (Config.DB_ENABLED) {
+            String sql = "SELECT id, sender, receiver, timestamp, message FROM messages WHERE FIND_IN_SET(?, receiver) ORDER BY timestamp DESC";
+            try {
+                PreparedStatement statement = dbConnection.prepareStatement(sql);
+                statement.setString(1, receiver.getId());
+                ResultSet resultSet = statement.executeQuery();
+                List<Message> messages = new ArrayList<>();
+                while (resultSet.next()) {
+                    Message message = new Message(
+                            new Message.MetaData(
+                                    resultSet.getString("id"),
+                                    resultSet.getString("sender"),
+                                    List.of(resultSet.getString("receiver").split(",")),
+                                    resultSet.getString("timestamp")
+                            ),
+                            new Message.MessageData(resultSet.getString("message"))
+                    );
+                    messages.add(message);
+                }
+                return messages;
+            } catch (SQLException e) {
+                log.error("Failed to get messages by receiver " + e.getMessage());
+            }
+        }
         List<Message> messages = new ArrayList<>();
         for (Message message : activeMessages.values()) {
             if (message.getMetaData().getReceiver().contains(receiver.getId())) {
@@ -220,6 +259,50 @@ public class State {
             }
         }
         return messages;
+    }
+
+    /**
+     * Get the most recent messages.
+     *
+     * @param user The user to get the messages for.
+     * @param count The maximum number of messages to return.
+     * @return The most recent messages.
+     */
+    public List<Message> getRecentMessages(User user, int count) {
+        if (Config.DB_ENABLED) {
+            String sql = "SELECT id, sender, receiver, timestamp, message FROM messages WHERE FIND_IN_SET(?, receiver) ORDER BY timestamp DESC LIMIT " + count;
+            try {
+                PreparedStatement statement = dbConnection.prepareStatement(sql);
+                statement.setString(1, user.getId());
+                ResultSet resultSet = statement.executeQuery();
+                List<Message> messages = new ArrayList<>();
+                while (resultSet.next()) {
+                    Message message = new Message(
+                            new Message.MetaData(
+                                    resultSet.getString("id"),
+                                    resultSet.getString("sender"),
+                                    List.of(resultSet.getString("receiver").split(",")),
+                                    resultSet.getString("timestamp")
+                            ),
+                            new Message.MessageData(resultSet.getString("message"))
+                    );
+                    messages.add(message);
+                }
+                return messages;
+            } catch (SQLException e) {
+                log.error("Failed to get recent messages " + e.getMessage());
+            }
+        }
+        List<Message> messages = new ArrayList<>();
+        for (Message message : activeMessages.values()) {
+            if (message.getMetaData().getReceiver().contains(user.getId()) && count-- > 0) {
+                messages.add(message);
+            } else if (count <= 0) {
+                break;
+            }
+        }
+        PriorityQueue<Message> m = new PriorityQueue<Message>(messages);
+        return m.stream().toList();
     }
 
     /**
