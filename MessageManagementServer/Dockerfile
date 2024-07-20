@@ -14,4 +14,4 @@ RUN ./gradlew build
 EXPOSE 8080
 
 # Define the command to run your app
-CMD [ "java", "-jar", "build/libs/your-app-name.jar" ]
+CMD [ "java", "-jar", "build/libs/MessageManagementServer-1.0-MMS.jar" ]

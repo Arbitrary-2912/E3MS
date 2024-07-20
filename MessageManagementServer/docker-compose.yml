@@ -1,30 +1,35 @@
-version: '3'
+version: '3.8'
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     ports:
       - "8080:8080"
+    environment:
+      DB_URL: "jdbc:mysql://db:3306/yourdatabase"
+      DB_USERNAME: "e3ms"
+      DB_PASSWORD: "password"
     depends_on:
       - db
-      - rabbitmq
+    networks:
+      - app-network
 
   db:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: your_database
-      MYSQL_USER: your_user
-      MYSQL_PASSWORD: your_password
-    volumes:
-      - db_data:/var/lib/mysql
-
-  rabbitmq:
-    image: rabbitmq:3-management
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: "e3ms"
+      MYSQL_USER: "e3ms"
+      MYSQL_PASSWORD: "password"
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "3306:3306"
+    networks:
+      - app-network
+    volumes:
+      - db-data:/var/lib/mysql
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
-  db_data:
+  db-data:
