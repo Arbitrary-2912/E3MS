@@ -301,8 +301,8 @@ public class State {
                 break;
             }
         }
-        PriorityQueue<Message> m = new PriorityQueue<Message>(messages);
-        return m.stream().toList();
+        Collections.sort(messages);
+        return messages;
     }
 
     /**
