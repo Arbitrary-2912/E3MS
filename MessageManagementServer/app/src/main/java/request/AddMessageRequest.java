@@ -75,6 +75,7 @@ public class AddMessageRequest implements Request {
      */
     public void execute() {
         try {
+            // TODO derive the shared secret
             state.addMessage(message);
             success = true;
         } catch (Exception e) {

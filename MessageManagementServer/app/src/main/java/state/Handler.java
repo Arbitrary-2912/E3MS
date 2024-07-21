@@ -170,7 +170,8 @@ public class Handler {
                                         metaDataContainer.get("id").getAsString(),
                                         metaDataContainer.get("sender").getAsString(),
                                         receiverList,
-                                        metaDataContainer.get("timestamp").getAsString()
+                                        metaDataContainer.get("timestamp").getAsString(),
+                                        metaDataContainer.get("sharedSecret").getAsString()
                                 ),
                                 new Message.MessageData(
                                         messageDataContainer.get("message").getAsString()

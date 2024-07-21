@@ -1,5 +1,6 @@
 package state;
 
+import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import system.Config;
@@ -41,7 +42,7 @@ public class State {
                 statement.execute("CREATE DATABASE IF NOT EXISTS e3ms;");
                 statement.execute("USE e3ms;");
                 statement.execute("CREATE TABLE IF NOT EXISTS users (id VARCHAR(255), name VARCHAR(255), username VARCHAR(255), password VARCHAR(255)), identitykey VARCHAR(255), signedprekey VARCHAR(255), prekeysignature VARCHAR(255), otpkey1 VARCHAR(255), otpkey2 VARCHAR(255), otpkey3 VARCHAR(255), otpkey4 VARCHAR(255);");
-                statement.execute("CREATE TABLE IF NOT EXISTS messages (id VARCHAR(255), sender VARCHAR(255), receiver VARCHAR(255), timestamp VARCHAR(255), message VARCHAR(7500));");
+                statement.execute("CREATE TABLE IF NOT EXISTS messages (id VARCHAR(255), sender VARCHAR(255), receiver VARCHAR(255), timestamp VARCHAR(255), sharedSecret VARCHAR(255), message VARCHAR(7500));");
                 loadState(dbConnection.createStatement());
             } catch (SQLException e) {
                 log.error("Failed to connect to database " + e.getMessage());
@@ -92,7 +93,8 @@ public class State {
                                 messages.getString("id"),
                                 messages.getString("sender"),
                                 List.of(messages.getString("receiver").split(",")),
-                                messages.getString("timestamp")
+                                messages.getString("timestamp"),
+                                messages.getString("sharedSecret")
                         ),
                         new Message.MessageData(messages.getString("message"))
                 );
@@ -187,7 +189,7 @@ public class State {
      * @param sender The sender of the message.
      * @return The message with the given sender.
      */
-    public List<Message> getMessagesBySender(User sender) {
+    public List<Message> getMessagesBySender(User sender) {  // TODO perform credentials agreement checking
         if (Config.DB_ENABLED) {
             String sql = "SELECT id, sender, receiver, timestamp, message FROM messages WHERE sender = ? ORDER BY timestamp DESC";
             try {
@@ -201,7 +203,8 @@ public class State {
                                     resultSet.getString("id"),
                                     resultSet.getString("sender"),
                                     List.of(resultSet.getString("receiver").split(",")),
-                                    resultSet.getString("timestamp")
+                                    resultSet.getString("timestamp"),
+                                    resultSet.getString("sharedSecret")
                             ),
                             new Message.MessageData(resultSet.getString("message"))
                     );
@@ -227,7 +230,7 @@ public class State {
      * @param receiver The receiver of the message.
      * @return The message with the given receiver.
      */
-    public List<Message> getMessagesByReceiver(User receiver) {
+    public List<Message> getMessagesByReceiver(User receiver) { // TODO perform credentials agreement checking
         if (Config.DB_ENABLED) {
             String sql = "SELECT id, sender, receiver, timestamp, message FROM messages WHERE FIND_IN_SET(?, receiver) ORDER BY timestamp DESC";
             try {
@@ -241,7 +244,8 @@ public class State {
                                     resultSet.getString("id"),
                                     resultSet.getString("sender"),
                                     List.of(resultSet.getString("receiver").split(",")),
-                                    resultSet.getString("timestamp")
+                                    resultSet.getString("timestamp"),
+                                    resultSet.getString("sharedSecret")
                             ),
                             new Message.MessageData(resultSet.getString("message"))
                     );
@@ -268,7 +272,7 @@ public class State {
      * @param count The maximum number of messages to return.
      * @return The most recent messages.
      */
-    public List<Message> getRecentMessages(User user, int count) {
+    public List<Message> getRecentMessages(User user, int count) { // TODO perform credentials agreement checking
         if (Config.DB_ENABLED) {
             String sql = "SELECT id, sender, receiver, timestamp, message FROM messages WHERE FIND_IN_SET(?, receiver) ORDER BY timestamp DESC LIMIT " + count;
             try {
@@ -282,7 +286,8 @@ public class State {
                                     resultSet.getString("id"),
                                     resultSet.getString("sender"),
                                     List.of(resultSet.getString("receiver").split(",")),
-                                    resultSet.getString("timestamp")
+                                    resultSet.getString("timestamp"),
+                                    resultSet.getString("sharedSecret")
                             ),
                             new Message.MessageData(resultSet.getString("message"))
                     );
