@@ -23,5 +23,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "../node_modules/@types/node/buffer.d.ts"
+  ]
 }
