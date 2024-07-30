@@ -132,8 +132,8 @@ public class Handler {
                                         userCredentials.get("username").getAsString(),
                                         userCredentials.get("password").getAsString(),
                                         userCredentials.get("identityKey").getAsString(),
+                                        userCredentials.get("ephemeralKey").getAsString(),
                                         userCredentials.get("signedPreKey").getAsString(),
-                                        userCredentials.get("preKeySignature").getAsString(),
                                         new ArrayList<>() {{
                                             JsonArray oneTimePreKeys = (JsonArray) userCredentials.get("oneTimePreKeys");
                                             for (int i = 0; i < oneTimePreKeys.size(); i++) {
@@ -189,7 +189,7 @@ public class Handler {
                                         userCredentials.get("password").getAsString(),
                                         userCredentials.get("identityKey").getAsString(),
                                         userCredentials.get("signedPreKey").getAsString(),
-                                        userCredentials.get("preKeySignature").getAsString(),
+                                        userCredentials.get("signedPreKey").getAsString(),
                                         new ArrayList<>() {{
                                             JsonArray oneTimePreKeys = (JsonArray) userCredentials.get("oneTimePreKeys");
                                             for (int i = 0; i < oneTimePreKeys.size(); i++) {
@@ -215,8 +215,8 @@ public class Handler {
                                 userCredentials.get("username").getAsString(),
                                 userCredentials.get("password").getAsString(),
                                 userCredentials.get("identityKey").getAsString(),
+                                userCredentials.get("ephemeralKey").getAsString(),
                                 userCredentials.get("signedPreKey").getAsString(),
-                                userCredentials.get("preKeySignature").getAsString(),
                                 new ArrayList<>() {{
                                     JsonArray oneTimePreKeys = (JsonArray) userCredentials.get("oneTimePreKeys");
                                     for (int i = 0; i < oneTimePreKeys.size(); i++) {

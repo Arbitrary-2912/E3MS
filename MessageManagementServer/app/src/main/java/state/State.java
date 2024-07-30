@@ -68,8 +68,8 @@ public class State {
                                 users.getString("username"),
                                 users.getString("password"),
                                 users.getString("identityKey"),
+                                users.getString("ephemeralKey"),
                                 users.getString("signedPreKey"),
-                                users.getString("preKeySignature"),
                                 new ArrayList<>() {
                                     {
                                         add(users.getString("otpKey1"));

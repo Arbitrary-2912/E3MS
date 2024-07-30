@@ -2,7 +2,7 @@ import { ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { verifyUsername } from './api/verifyusername';
 import { addUser } from './api/adduser.ts';
-import {base64ToUint8Array, Credentials, User} from './data/user.ts';
+import {base64ToUint8Array, Credentials, User, UserCredentials} from './data/user.ts';
 import { useUser } from './UserContext';
 
 function SignIn() {
@@ -34,10 +34,10 @@ function SignIn() {
         );
 
         // TODO - add check to make sure user id is unique
+        const newUser = await addUser(new User(userCredentials, Math.random().toString(36).substring(7), username));
 
-        const newUser = await addUser(new User(userCredentials,  Math.random().toString(36).substring(7), username));
-
-        console.log('Decoded identity key:', base64ToUint8Array(userCredentials.identityKeyPair.publicKey));
+        console.log(newUser)
+        // console.log('Decoded identity key:', base64ToUint8Array(userCredentials.identityKeyPair.publicKey));
         if (newUser) {
             navigate('/messages');
         } else {

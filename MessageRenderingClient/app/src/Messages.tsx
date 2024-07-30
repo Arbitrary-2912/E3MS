@@ -2,7 +2,7 @@ import React, { useState, useEffect, ChangeEvent } from 'react';
 import { getRecentMessages } from './api/getrecentmessages';
 import { addMessage } from './api/addmessage';
 import { Message, MetaData, MessageData } from './data/message';
-import { Credentials, User } from './data/user';
+import {Credentials, User} from './data/user';
 import crypto from 'crypto';
 
 function Messages() {
@@ -23,10 +23,10 @@ function Messages() {
                 console.log('Identity Private Key:', userCredentials.identityKeyPair.secretKey);
                 console.log('Ephemeral Public Key:', userCredentials.ephemeralKeyPair.publicKey);
                 console.log('Ephemeral Private Key:', userCredentials.ephemeralKeyPair.secretKey);
-                console.log('Signed Prekey Public Key:', userCredentials.signedPrekeyPair.publicKey);
-                console.log('Signed Prekey Private Key:', userCredentials.signedPrekeyPair.secretKey);
+                console.log('Signed Prekey Public Key:', userCredentials.signedPreKeyPair.publicKey);
+                console.log('Signed Prekey Private Key:', userCredentials.signedPreKeyPair.secretKey);
 
-                const response = await getRecentMessages(new User(userCredentials, "User 1", "User 1"));
+                const response = await getRecentMessages(new User(Credentials, "User 1", "User 1"));
                 console.log("Received messages: ", response);
                 setMessages(response);
             } catch (error) {

@@ -10,6 +10,21 @@ export class User {
         this.id = id;
         this.name = name;
     }
+
+    public getPublicInfo() {
+        return {
+            credentials: {
+                username: this.name,
+                password: this.credentials.password,
+                identityKey: this.credentials.identityKeyPair.publicKey,
+                ephemeralKey: this.credentials.ephemeralKeyPair.publicKey,
+                signedPreKey: this.credentials.signedPreKeyPair.publicKey,
+                oneTimePreKeys: this.credentials.oneTimePreKeyPairs.map(keyPair => (keyPair.publicKey))
+            },
+            id: this.id,
+            name: this.name,
+        };
+    }
 }
 
 export class Credentials {
@@ -17,8 +32,8 @@ export class Credentials {
     password: string;
     identityKeyPair: { publicKey: string; secretKey: string };
     ephemeralKeyPair: { publicKey: string; secretKey: string };
-    signedPrekeyPair: { publicKey: string; secretKey: string };
-    oneTimePrekeyPairs: { publicKey: string; secretKey: string }[];
+    signedPreKeyPair: { publicKey: string; secretKey: string };
+    oneTimePreKeyPairs: { publicKey: string; secretKey: string }[];
 
     constructor(username: string, password: string) {
         this.username = username;
@@ -29,11 +44,11 @@ export class Credentials {
 
         this.ephemeralKeyPair = this.generateKeyPair();
 
-        this.signedPrekeyPair = this.generateKeyPair();
+        this.signedPreKeyPair = this.generateKeyPair();
 
-        this.oneTimePrekeyPairs = [];
+        this.oneTimePreKeyPairs = [];
         for (let i = 0; i < 4; i++) {
-            this.oneTimePrekeyPairs.push(this.generateKeyPair());
+            this.oneTimePreKeyPairs.push(this.generateKeyPair());
         }
     }
 

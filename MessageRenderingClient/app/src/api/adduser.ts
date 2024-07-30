@@ -2,9 +2,12 @@ import axios from "axios";
 import {User} from "../data/user.ts";
 
 export const addUser = (user: User) : Promise<boolean> => {
+    const publicUserInfo = user.getPublicInfo();
+    console.log(publicUserInfo)
+
     return axios.post('http://localhost:8080/', {
         command: "addUser",
-        user: user
+        user: publicUserInfo
     })
         .then((response: any) => {
             console.log(response.data);

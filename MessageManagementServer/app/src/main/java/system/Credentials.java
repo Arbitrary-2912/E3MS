@@ -15,6 +15,9 @@ public class Credentials {
     private String password;
     @SerializedName("identityKey")
     private String identityKey;
+
+    @SerializedName("ephemeralKey")
+    private String ephemeralKey;
     @SerializedName("signedPreKey")
     private String signedPreKey;
     @SerializedName("preKeySignature")
@@ -28,12 +31,12 @@ public class Credentials {
      * @param username the username
      * @param password the password
      */
-    public Credentials(String username, String password, String identityKey, String signedPreKey, String preKeySignature, ArrayList<String> oneTimePreKeys) {
+    public Credentials(String username, String password, String identityKey, String ephemeralKey, String signedPreKey, ArrayList<String> oneTimePreKeys) {
         this.username = username;
         this.password = password;
         this.identityKey = identityKey;
+        this.ephemeralKey = ephemeralKey;
         this.signedPreKey = signedPreKey;
-        this.preKeySignature = preKeySignature;
         this.oneTimePreKeys = oneTimePreKeys;
     }
 
