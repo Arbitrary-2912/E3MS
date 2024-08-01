@@ -18,13 +18,6 @@ function Messages() {
                     "User 1",
                     "password",
                 );
-                console.log('password:', userCredentials.password)
-                console.log('Identity Public Key:', userCredentials.identityKeyPair.publicKey);
-                console.log('Identity Private Key:', userCredentials.identityKeyPair.secretKey);
-                console.log('Ephemeral Public Key:', userCredentials.ephemeralKeyPair.publicKey);
-                console.log('Ephemeral Private Key:', userCredentials.ephemeralKeyPair.secretKey);
-                console.log('Signed Prekey Public Key:', userCredentials.signedPreKeyPair.publicKey);
-                console.log('Signed Prekey Private Key:', userCredentials.signedPreKeyPair.secretKey);
 
                 const response = await getRecentMessages(new User(Credentials, "User 1", "User 1"));
                 console.log("Received messages: ", response);
