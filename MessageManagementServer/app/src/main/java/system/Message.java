@@ -85,8 +85,7 @@ public class Message implements Comparable<Message> {
         private List<String> receiver;
         @SerializedName("timestamp")
         private String timestamp;
-        @SerializedName("sharedSecret")
-        private String sharedSecret;
+
 
         /**
          * Constructor for the MetaData class.
@@ -96,12 +95,11 @@ public class Message implements Comparable<Message> {
          * @param receiver  The receiver of the message.
          * @param timestamp The timestamp of the message.
          */
-        public MetaData(String id, String sender, List<String> receiver, String timestamp, String sharedSecret) {
+        public MetaData(String id, String sender, List<String> receiver, String timestamp) {
             this.id = id;
             this.sender = sender;
             this.receiver = receiver;
             this.timestamp = timestamp;
-            this.sharedSecret = sharedSecret;
         }
 
         /**
@@ -174,24 +172,6 @@ public class Message implements Comparable<Message> {
          */
         public void setTimestamp(String timestamp) {
             this.timestamp = timestamp;
-        }
-
-        /**
-         * Gets the shared secret of the message.
-         *
-         * @return The shared secret of the message.
-         */
-        public String getSharedSecret() {
-            return sharedSecret;
-        }
-
-        /**
-         * Sets the shared secret of the message.
-         *
-         * @param sharedSecret The shared secret of the message.
-         */
-        public void setSharedSecret(String sharedSecret) {
-            this.sharedSecret = sharedSecret;
         }
 
         /**

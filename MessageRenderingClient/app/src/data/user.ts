@@ -5,8 +5,8 @@ export class User {
     id: string;
     name: string;
 
-    constructor(credentials: Credentials, id: string, name: string) {
-        this.credentials = credentials;
+    constructor(id: string, name: string, password: string) {
+        this.credentials = new Credentials(name, password);
         this.id = id;
         this.name = name;
     }
@@ -19,7 +19,6 @@ export class User {
                 identityKey: this.credentials.identityKeyPair.publicKey,
                 ephemeralKey: this.credentials.ephemeralKeyPair.publicKey,
                 signedPreKey: this.credentials.signedPreKeyPair.publicKey,
-                oneTimePreKeys: this.credentials.oneTimePreKeyPairs.map(keyPair => (keyPair.publicKey))
             },
             id: this.id,
             name: this.name,
@@ -27,13 +26,24 @@ export class User {
     }
 }
 
-export class Credentials {
+export class PublicCredentials {
+    identityKey: string;
+    ephemeralKey: string;
+    signedPreKey: string;
+
+    constructor(identityKey: string, ephemeralKey: string, signedPreKey: string) {
+        this.identityKey = identityKey;
+        this.ephemeralKey = ephemeralKey;
+        this.signedPreKey = signedPreKey;
+    }
+}
+
+class Credentials {
     username: string;
     password: string;
     identityKeyPair: { publicKey: string; secretKey: string };
     ephemeralKeyPair: { publicKey: string; secretKey: string };
     signedPreKeyPair: { publicKey: string; secretKey: string };
-    oneTimePreKeyPairs: { publicKey: string; secretKey: string }[];
 
     constructor(username: string, password: string) {
         this.username = username;
@@ -45,11 +55,6 @@ export class Credentials {
         this.ephemeralKeyPair = this.generateKeyPair();
 
         this.signedPreKeyPair = this.generateKeyPair();
-
-        this.oneTimePreKeyPairs = [];
-        for (let i = 0; i < 4; i++) {
-            this.oneTimePreKeyPairs.push(this.generateKeyPair());
-        }
     }
 
     private generateKeyPair(): { publicKey: string; secretKey: string } {
@@ -69,30 +74,30 @@ export class Credentials {
         recipientSignedPreKey: Uint8Array,
         recipientOneTimePreKey: Uint8Array | null
     ): Uint8Array {
-        const DH1 = this.diffieHellman(recipientIdentityPublicKey, base64ToUint8Array(this.ephemeralKeyPair.secretKey));
-        const DH2 = this.diffieHellman(recipientSignedPreKey, base64ToUint8Array(this.identityKeyPair.secretKey));
-        const DH3 = this.diffieHellman(recipientSignedPreKey, base64ToUint8Array(this.ephemeralKeyPair.secretKey));
+        const DH1 = this.diffieHellman(base64ToUint8Array(this.identityKeyPair.secretKey), recipientSignedPreKey);
+        const DH2 = this.diffieHellman(base64ToUint8Array(this.ephemeralKeyPair.secretKey), recipientIdentityPublicKey);
+        const DH3 = this.diffieHellman(base64ToUint8Array(this.ephemeralKeyPair.secretKey), recipientIdentityPublicKey);
         let DH4: Uint8Array | null = null;
 
         if (recipientOneTimePreKey) {
-            DH4 = this.diffieHellman(recipientOneTimePreKey, base64ToUint8Array(this.ephemeralKeyPair.secretKey));
+            DH4 = this.diffieHellman(base64ToUint8Array(this.ephemeralKeyPair.secretKey), recipientOneTimePreKey);
         }
 
         // Calculate the total length of all DH shared secrets
         const totalLength = DH1.length + DH2.length + DH3.length + (DH4 ? DH4.length : 0);
 
         // Create a new Uint8Array with the total length
-        const combined = new Uint8Array(totalLength);
+        const sharedSecret = new Uint8Array(totalLength);
 
         // Copy each DH shared secret into the combined array
-        combined.set(DH1, 0);
-        combined.set(DH2, DH1.length);
-        combined.set(DH3, DH1.length + DH2.length);
+        sharedSecret.set(DH1, 0);
+        sharedSecret.set(DH2, DH1.length);
+        sharedSecret.set(DH3, DH1.length + DH2.length);
         if (DH4) {
-            combined.set(DH4, DH1.length + DH2.length + DH3.length);
+            sharedSecret.set(DH4, DH1.length + DH2.length + DH3.length);
         }
 
-        return nacl.hash(combined);
+        return sharedSecret;
     }
 }
 

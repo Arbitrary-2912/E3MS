@@ -2,7 +2,7 @@ import { ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { verifyUsername } from './api/verifyusername';
 import { addUser } from './api/adduser.ts';
-import {Credentials, retrieveKeys, storeKeys, User} from './data/user.ts';
+import { retrieveKeys, storeKeys, User} from './data/user.ts';
 import { useUser } from './UserContext';
 
 function SignIn() {
@@ -35,14 +35,11 @@ function SignIn() {
     };
 
     const handleSignUp = async () => {
-        const userCredentials = new Credentials(
-            username,
-            password,
-        );
+        const newUser = new User(Math.random().toString(36).substring(7), username, password);
 
         // TODO - add check to make sure user id is unique
-        await storeKeys(username, password, userCredentials);
-        const user = await addUser(new User(userCredentials, Math.random().toString(36).substring(7), username));
+        await storeKeys(username, password, newUser.credentials);
+        const user = await addUser(newUser);
 
         console.log(user)
         // console.log('Decoded identity key:', base64ToUint8Array(userCredentials.identityKeyPair.publicKey));

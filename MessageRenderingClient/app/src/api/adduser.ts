@@ -3,7 +3,6 @@ import {User} from "../data/user.ts";
 
 export const addUser = (user: User) : Promise<boolean> => {
     const publicUserInfo = user.getPublicInfo();
-    console.log(publicUserInfo)
 
     return axios.post('http://localhost:8080/', {
         command: "addUser",

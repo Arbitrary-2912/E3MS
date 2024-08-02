@@ -2,28 +2,22 @@ import React, { useState, useEffect, ChangeEvent } from 'react';
 import { getRecentMessages } from './api/getrecentmessages';
 import { addMessage } from './api/addmessage';
 import { Message, MetaData, MessageData } from './data/message';
-import {Credentials, User} from './data/user';
-import crypto from 'crypto';
+import { User } from './data/user';
 
 function Messages() {
     const [message, setMessage] = useState<string>('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [sharedKey, setSharedKey] = useState<Buffer | null>(null);
 
-
     useEffect(() => {
         const fetchMessages = async () => {
             try {
-                const userCredentials = new Credentials(
-                    "User 1",
-                    "password",
-                );
-
-                const response = await getRecentMessages(new User(Credentials, "User 1", "User 1"));
+                const response = await getRecentMessages("User 1");
                 console.log("Received messages: ", response);
-                setMessages(response);
+                setMessages(response || []);  // Ensure response is an array
             } catch (error) {
                 console.error("Error fetching messages: ", error);
+                setMessages([]);  // Fallback to empty array in case of error
             }
         };
 
@@ -32,8 +26,6 @@ function Messages() {
 
         return () => clearInterval(intervalId);
     }, []);
-
-
 
     const handleMessageChange = (event: ChangeEvent<HTMLInputElement>) => {
         setMessage(event.target.value);
@@ -52,7 +44,7 @@ function Messages() {
             new MessageData(message)
         );
 
-        setMessages([...messages, newMessage]);
+        setMessages([...messages, newMessage]);  // Ensure messages is an array
         setMessage('');
 
         addMessage(newMessage);
@@ -61,7 +53,7 @@ function Messages() {
     return (
         <div className="chat-section">
             <div className="message-list">
-                {messages.map((msg, index) => (
+                {messages && messages.map((msg, index) => (
                     <MessageComponent key={index} message={msg} />
                 ))}
             </div>
@@ -73,7 +65,7 @@ function Messages() {
                 onChange={handleMessageChange}
             />
             <button className="button" onClick={handleSendMessage}>Send</button>
-            <button className="button" onClick={handleSendMessage}>Refresh</button>
+            <button className="button" onClick={() => window.location.reload()}>Refresh</button>
         </div>
     );
 }

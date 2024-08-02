@@ -1,6 +1,5 @@
 package state;
 
-import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import system.Config;
@@ -41,8 +40,8 @@ public class State {
                 Statement statement = dbConnection.createStatement();
                 statement.execute("CREATE DATABASE IF NOT EXISTS e3ms;");
                 statement.execute("USE e3ms;");
-                statement.execute("CREATE TABLE IF NOT EXISTS users (id VARCHAR(255), name VARCHAR(255), username VARCHAR(255), password VARCHAR(255)), identitykey VARCHAR(255), signedprekey VARCHAR(255), prekeysignature VARCHAR(255), otpkey1 VARCHAR(255), otpkey2 VARCHAR(255), otpkey3 VARCHAR(255), otpkey4 VARCHAR(255);");
-                statement.execute("CREATE TABLE IF NOT EXISTS messages (id VARCHAR(255), sender VARCHAR(255), receiver VARCHAR(255), timestamp VARCHAR(255), sharedSecret VARCHAR(255), message VARCHAR(7500));");
+                statement.execute("CREATE TABLE IF NOT EXISTS users (id VARCHAR(255), alias VARCHAR(255), username VARCHAR(255), password VARCHAR(255)), identitykey VARCHAR(255), ephemeralkey VARCHAR(255), signedprekey VARCHAR(255);");
+                statement.execute("CREATE TABLE IF NOT EXISTS messages (id VARCHAR(255), sender VARCHAR(255), receiver VARCHAR(255), timestamp VARCHAR(255), message VARCHAR(7500));");
                 loadState(dbConnection.createStatement());
             } catch (SQLException e) {
                 log.error("Failed to connect to database " + e.getMessage());
@@ -69,18 +68,10 @@ public class State {
                                 users.getString("password"),
                                 users.getString("identityKey"),
                                 users.getString("ephemeralKey"),
-                                users.getString("signedPreKey"),
-                                new ArrayList<>() {
-                                    {
-                                        add(users.getString("otpKey1"));
-                                        add(users.getString("otpKey2"));
-                                        add(users.getString("otpKey3"));
-                                        add(users.getString("otpKey4"));
-                                    }
-                                }
+                                users.getString("signedPreKey")
                         ),
-                        users.getString("name"),
-                        users.getString("name")
+                        users.getString("id"),
+                        users.getString("alias")
                 );
                 user.setId(users.getString("id"));
                 activeUsers.put(user.getId(), user);
@@ -93,8 +84,7 @@ public class State {
                                 messages.getString("id"),
                                 messages.getString("sender"),
                                 List.of(messages.getString("receiver").split(",")),
-                                messages.getString("timestamp"),
-                                messages.getString("sharedSecret")
+                                messages.getString("timestamp")
                         ),
                         new Message.MessageData(messages.getString("message"))
                 );
@@ -114,31 +104,15 @@ public class State {
      */
     public void addUser(User user) throws SQLException {
         if (Config.DB_ENABLED) {
-            String sql = "INSERT INTO users (id, name, username, password, identitykey, signedprekey, prekeysignature, otpkey1, otpkey2, otpkey3, otpkey4) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO users (id, alias, username, password, identitykey, ephemeralkey, signedprekey) VALUES (?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement statement = dbConnection.prepareStatement(sql);
             statement.setString(1, user.getId());
-            statement.setString(2, user.getName());
+            statement.setString(2, user.getAlias());
             statement.setString(3, user.getCredentials().getUsername());
             statement.setString(4, user.getCredentials().getPassword());
             statement.setString(5, user.getCredentials().getIdentityKey());
-            statement.setString(6, user.getCredentials().getSignedPreKey());
-            statement.setString(7, user.getCredentials().getPreKeySignature());
-            statement.setString(
-                    8,
-                    user.getCredentials().getOneTimePreKeys().get(0) == null ? "" : user.getCredentials().getOneTimePreKeys().get(0)
-            );
-            statement.setString(
-                    9,
-                    user.getCredentials().getOneTimePreKeys().get(1) == null ? "" : user.getCredentials().getOneTimePreKeys().get(1)
-            );
-            statement.setString(
-                    10,
-                    user.getCredentials().getOneTimePreKeys().get(2) == null ? "" : user.getCredentials().getOneTimePreKeys().get(2)
-            );
-            statement.setString(
-                    11,
-                    user.getCredentials().getOneTimePreKeys().get(3) == null ? "" : user.getCredentials().getOneTimePreKeys().get(3)
-            );
+            statement.setString(6, user.getCredentials().getEphemeralKey());
+            statement.setString(7, user.getCredentials().getSignedPreKey());
             statement.executeUpdate();
         }
         activeUsers.put(user.getId(), user);
@@ -203,8 +177,7 @@ public class State {
                                     resultSet.getString("id"),
                                     resultSet.getString("sender"),
                                     List.of(resultSet.getString("receiver").split(",")),
-                                    resultSet.getString("timestamp"),
-                                    resultSet.getString("sharedSecret")
+                                    resultSet.getString("timestamp")
                             ),
                             new Message.MessageData(resultSet.getString("message"))
                     );
@@ -244,8 +217,7 @@ public class State {
                                     resultSet.getString("id"),
                                     resultSet.getString("sender"),
                                     List.of(resultSet.getString("receiver").split(",")),
-                                    resultSet.getString("timestamp"),
-                                    resultSet.getString("sharedSecret")
+                                    resultSet.getString("timestamp")
                             ),
                             new Message.MessageData(resultSet.getString("message"))
                     );
@@ -268,16 +240,16 @@ public class State {
     /**
      * Get the most recent messages.
      *
-     * @param user The user to get the messages for.
+     * @param userId The userId to get the messages for.
      * @param count The maximum number of messages to return.
      * @return The most recent messages.
      */
-    public List<Message> getRecentMessages(User user, int count) { // TODO perform credentials agreement checking
+    public List<Message> getRecentMessages(String userId, int count) { // TODO perform credentials agreement checking
         if (Config.DB_ENABLED) {
             String sql = "SELECT id, sender, receiver, timestamp, message FROM messages WHERE FIND_IN_SET(?, receiver) ORDER BY timestamp DESC LIMIT " + count;
             try {
                 PreparedStatement statement = dbConnection.prepareStatement(sql);
-                statement.setString(1, user.getId());
+                statement.setString(1, userId);
                 ResultSet resultSet = statement.executeQuery();
                 List<Message> messages = new ArrayList<>();
                 while (resultSet.next()) {
@@ -286,8 +258,7 @@ public class State {
                                     resultSet.getString("id"),
                                     resultSet.getString("sender"),
                                     List.of(resultSet.getString("receiver").split(",")),
-                                    resultSet.getString("timestamp"),
-                                    resultSet.getString("sharedSecret")
+                                    resultSet.getString("timestamp")
                             ),
                             new Message.MessageData(resultSet.getString("message"))
                     );
@@ -300,7 +271,7 @@ public class State {
         }
         List<Message> messages = new ArrayList<>();
         for (Message message : activeMessages.values()) {
-            if (message.getMetaData().getReceiver().contains(user.getId()) && count-- > 0) {
+            if (message.getMetaData().getReceiver().contains(userId) && count-- > 0) {
                 messages.add(message);
             } else if (count <= 0) {
                 break;
@@ -376,18 +347,14 @@ public class State {
         if (user != null) {
             if (Config.DB_ENABLED) {
                 try {
-                    String sql = "UPDATE users SET username = ?, password = ?, identitykey = ?, signedprekey = ?, prekeysignature = ?, otpkey1 = ?, otpkey2 = ?, otpkey3 = ?, otpkey4 = ? WHERE id = ?";
+                    String sql = "UPDATE users SET username = ?, password = ?, identitykey = ?, ephemeralkey = ?, signedprekey = ? WHERE id = ?";
                     PreparedStatement statement = dbConnection.prepareStatement(sql);
                     statement.setString(1, credentials.getUsername());
                     statement.setString(2, credentials.getPassword());
                     statement.setString(3, credentials.getIdentityKey());
-                    statement.setString(4, credentials.getSignedPreKey());
-                    statement.setString(5, credentials.getPreKeySignature());
-                    statement.setString(6, credentials.getOneTimePreKeys().get(0));
-                    statement.setString(7, credentials.getOneTimePreKeys().get(1));
-                    statement.setString(8, credentials.getOneTimePreKeys().get(2));
-                    statement.setString(9, credentials.getOneTimePreKeys().get(3));
-                    statement.setString(10, userId);
+                    statement.setString(4, credentials.getEphemeralKey());
+                    statement.setString(5, credentials.getSignedPreKey());
+                    statement.setString(6, userId);
                     statement.executeUpdate();
                 } catch (SQLException e) {
                     log.error("Failed to update credentials for user " + userId + " : " + e.getMessage());

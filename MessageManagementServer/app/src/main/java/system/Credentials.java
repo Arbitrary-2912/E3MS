@@ -20,10 +20,6 @@ public class Credentials {
     private String ephemeralKey;
     @SerializedName("signedPreKey")
     private String signedPreKey;
-    @SerializedName("preKeySignature")
-    private String preKeySignature;
-    @SerializedName("oneTimePreKeys")
-    private ArrayList<String> oneTimePreKeys;
 
     /**
      * Constructs a new Credentials object with the given username and password.
@@ -31,13 +27,12 @@ public class Credentials {
      * @param username the username
      * @param password the password
      */
-    public Credentials(String username, String password, String identityKey, String ephemeralKey, String signedPreKey, ArrayList<String> oneTimePreKeys) {
+    public Credentials(String username, String password, String identityKey, String ephemeralKey, String signedPreKey) {
         this.username = username;
         this.password = password;
         this.identityKey = identityKey;
         this.ephemeralKey = ephemeralKey;
         this.signedPreKey = signedPreKey;
-        this.oneTimePreKeys = oneTimePreKeys;
     }
 
     /**
@@ -81,16 +76,8 @@ public class Credentials {
      *
      * @return the pre key signature
      */
-    public String getPreKeySignature() {
-        return preKeySignature;
+    public String getEphemeralKey() {
+        return ephemeralKey;
     }
 
-    /**
-     * Gets the one time pre keys.
-     *
-     * @return the one time pre keys
-     */
-    public ArrayList<String> getOneTimePreKeys() {
-        return oneTimePreKeys;
-    }
 }

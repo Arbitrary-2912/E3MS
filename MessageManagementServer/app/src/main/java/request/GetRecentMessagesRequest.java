@@ -16,11 +16,11 @@ import java.util.List;
  */
 public class GetRecentMessagesRequest implements Request {
     private static int RECENCY_BUFFER = 10;
-    private User user;
+    private String userId;
     private List<Message> messages;
 
-    public GetRecentMessagesRequest(User user) {
-        this.user = user;
+    public GetRecentMessagesRequest(String userId) {
+        this.userId = userId;
     }
     /**
      * Constructs a GetRecentMessagesRequest object.
@@ -47,7 +47,7 @@ public class GetRecentMessagesRequest implements Request {
     @Override
     public void execute() {
         try {
-            messages = REST.getState().getRecentMessages(user, RECENCY_BUFFER);
+            messages = REST.getState().getRecentMessages(userId, RECENCY_BUFFER);
         } catch (Exception e) {
             messages = Collections.emptyList();
         }
