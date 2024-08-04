@@ -64,6 +64,16 @@ public class Message implements Comparable<Message> {
     }
 
     /**
+     * Gets the participants' ids of the message
+     * @return The participants of the message.
+     */
+    public List<String> getParticipantIds() {
+        List<String> participantIds = metaData.getReceiver();
+        participantIds.add(metaData.getSender());
+        return participantIds;
+    }
+
+    /**
      * Computes the hash code of the message.
      *
      * @return The hash code of the message.

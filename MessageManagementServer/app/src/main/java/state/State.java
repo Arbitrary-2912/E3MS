@@ -2,10 +2,7 @@ package state;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import system.Config;
-import system.Credentials;
-import system.Message;
-import system.User;
+import system.*;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -25,6 +22,7 @@ public class State {
     private java.sql.Connection dbConnection;
     private final HashMap<String, User> activeUsers;
     private final HashMap<String, Message> activeMessages;
+    private final HashMap<Set<User>, Conversation> conversations;
 
     /**
      * Constructor for the State class.
@@ -49,6 +47,7 @@ public class State {
         } else {
             activeUsers = new HashMap<>();
             activeMessages = new HashMap<>();
+            conversations = new HashMap<>();
         }
     }
 
@@ -77,7 +76,7 @@ public class State {
                 activeUsers.put(user.getId(), user);
             }
 
-            ResultSet messages = statement.executeQuery("SELECT * FROM messages");
+            ResultSet messages = statement.executeQuery("SELECT * FROM messages ORDER BY timestamp ASC");
             while (messages.next()) {
                 Message message = new Message(
                         new Message.MetaData(
@@ -89,6 +88,21 @@ public class State {
                         new Message.MessageData(messages.getString("message"))
                 );
                 activeMessages.put(message.getMetaData().getId(), message);
+            }
+
+            for (Message message: activeMessages.values()) {
+                Set<User> participants = new HashSet<>();
+                participants.add(getUserById(message.getMetaData().getSender()));
+                for (String receiverId: message.getMetaData().getReceiver()) {
+                    participants.add(getUserById(receiverId));
+                }
+                if (!conversations.containsKey(participants)) {
+                    conversations.put(participants, new Conversation(participants, new ArrayList<>() {{
+                        add(message);
+                    }}));
+                } else {
+                    conversations.get(participants).addMessage(message);
+                }
             }
         } else {
             log.info("Database is disabled, skipping loading state");
@@ -136,6 +150,17 @@ public class State {
             statement.executeUpdate();
         }
         activeMessages.put(message.getMetaData().getId(), message);
+        HashSet<User> participants = new HashSet<>();
+        for (String participantId: message.getParticipantIds()) {
+            participants.add(getUserById(participantId));
+        }
+        if (!conversations.containsKey(participants)) {
+            conversations.put(participants, new Conversation(participants, new ArrayList<>() {{
+                add(message);
+            }}));
+        } else {
+            conversations.get(participants).addMessage(message);
+        }
     }
 
     /**
@@ -334,6 +359,11 @@ public class State {
             statement.setString(1, message.getMetaData().getId());
             statement.executeUpdate();
         }
+        HashSet<User> participants = new HashSet<>();
+        for (String participantId: message.getParticipantIds()) {
+            participants.add(getUserById(participantId));
+        }
+        conversations.get(participants).removeMessage(message);
         activeMessages.remove(message.getMetaData().getId());
     }
 
