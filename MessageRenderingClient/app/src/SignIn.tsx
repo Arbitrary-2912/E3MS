@@ -23,7 +23,8 @@ function SignIn() {
         if (isValidUser) {
             const credentials = await retrieveKeys(username, password);
             if (credentials) {
-                const user = new User(credentials, username, username);
+                // TODO - store credentials to be acessed by messages
+                const user = new User(Math.random().toString(36).substring(7), username, password);
                 navigate('/messages');
             } else {
                 alert('Failed to retrieve keys. Please try again.');

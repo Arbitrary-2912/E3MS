@@ -19,5 +19,4 @@ export const getPublicCredentials = async (userId: string) => {
         console.error(error);
         return [];
     }
-
 };

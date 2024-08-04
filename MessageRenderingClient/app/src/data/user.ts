@@ -76,7 +76,7 @@ class Credentials {
     ): Uint8Array {
         const DH1 = this.diffieHellman(base64ToUint8Array(this.identityKeyPair.secretKey), recipientSignedPreKey);
         const DH2 = this.diffieHellman(base64ToUint8Array(this.ephemeralKeyPair.secretKey), recipientIdentityPublicKey);
-        const DH3 = this.diffieHellman(base64ToUint8Array(this.ephemeralKeyPair.secretKey), recipientIdentityPublicKey);
+        const DH3 = this.diffieHellman(base64ToUint8Array(this.ephemeralKeyPair.secretKey), recipientSignedPreKey);
         let DH4: Uint8Array | null = null;
 
         if (recipientOneTimePreKey) {
@@ -97,7 +97,8 @@ class Credentials {
             sharedSecret.set(DH4, DH1.length + DH2.length + DH3.length);
         }
 
-        return sharedSecret;
+        // Use a hash function to derive the final shared key
+        return nacl.hash(sharedSecret).subarray(0, 32);
     }
 }
 
@@ -200,3 +201,35 @@ export async function retrieveKeys(username: string, password: string): Promise<
     const keysJson = dec.decode(decryptedKeysArray);
     return JSON.parse(keysJson);
 }
+
+
+export async function getSharedKey(sender: User, recipient: User): Promise<string> {
+    // Retrieve sender's credentials
+    const senderCredentials = sender.credentials;
+
+    // Retrieve recipient's public credentials
+    const recipientPublicInfo = recipient.getPublicInfo();
+    const recipientCredentials = new PublicCredentials(
+        recipientPublicInfo.credentials.identityKey,
+        recipientPublicInfo.credentials.ephemeralKey,
+        recipientPublicInfo.credentials.signedPreKey
+    );
+
+    // Convert recipient's public keys from base64 to Uint8Array
+    const recipientIdentityPublicKey = base64ToUint8Array(recipientCredentials.identityKey);
+    const recipientSignedPreKey = base64ToUint8Array(recipientCredentials.signedPreKey);
+    const recipientOneTimePreKey = null;  // Adjust if the recipient has one-time pre-key
+
+    // Compute the shared key using the sender's x3dh method
+    const sharedKeyUint8Array = senderCredentials.x3dh(
+        recipientIdentityPublicKey,
+        recipientSignedPreKey,
+        recipientOneTimePreKey
+    );
+
+    // Convert the shared key to base64 string for transmission/storage
+    const sharedKeyBase64 = uint8ArrayToBase64(sharedKeyUint8Array);
+
+    return sharedKeyBase64;
+}
+

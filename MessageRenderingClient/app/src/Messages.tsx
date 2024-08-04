@@ -2,7 +2,7 @@ import React, { useState, useEffect, ChangeEvent } from 'react';
 import { getRecentMessages } from './api/getrecentmessages';
 import { addMessage } from './api/addmessage';
 import { Message, MetaData, MessageData } from './data/message';
-import { User } from './data/user';
+import { getSharedKey, User } from './data/user';
 
 function Messages() {
     const [message, setMessage] = useState<string>('');
@@ -36,7 +36,7 @@ function Messages() {
 
         const newMessage = new Message(
             new MetaData(
-                Math.random().toString(36).substring(7),
+                Math.random().toString(36).substring(10),
                 "User 1",
                 ["User 1"],
                 new Date().toLocaleString()
@@ -48,6 +48,17 @@ function Messages() {
         setMessage('');
 
         addMessage(newMessage);
+
+
+
+        const user1 = new User("test", "test", "test");
+        const user2 = new User("test1", "test1", "test1");
+
+        const sharedKey = getSharedKey(user1, user2);
+        console.log(sharedKey);
+
+        const sharedKey2 = getSharedKey(user2, user1);
+        console.log(sharedKey2);
     };
 
     return (
