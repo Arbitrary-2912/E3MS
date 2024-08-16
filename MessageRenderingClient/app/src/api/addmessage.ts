@@ -1,11 +1,12 @@
 import axios from "axios";
 import { Message } from "../data/message.ts";
+import {baseEndpoint} from "./apiconfig.ts";
 
 export const addMessage = (message: Message) => {
     // Convert the message to a server-ready object
     const serverMessage = message.toServerObject();
 
-    axios.post('http://localhost:8080/', {
+    axios.post(baseEndpoint, {
         command: "addMessage",
         message: serverMessage
     })

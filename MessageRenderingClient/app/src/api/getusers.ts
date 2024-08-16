@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { Credentials, User } from "../data/user.ts";
+import {baseEndpoint} from "./apiconfig.ts";
 
 export const getUsers = async (): Promise<Map<string, string>> => {
     try {
-        const response = await axios.post('http://localhost:8080/', {
+        const response = await axios.post(baseEndpoint, {
             command: "getUsers"
         });
 
