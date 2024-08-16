@@ -1,12 +1,8 @@
 package state;
 
-import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import system.Config;
-import system.Credentials;
-import system.Message;
-import system.User;
+import system.*;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -26,6 +22,7 @@ public class State {
     private java.sql.Connection dbConnection;
     private final HashMap<String, User> activeUsers;
     private final HashMap<String, Message> activeMessages;
+    private final HashMap<Set<User>, Conversation> conversations;
 
     /**
      * Constructor for the State class.
@@ -41,8 +38,8 @@ public class State {
                 Statement statement = dbConnection.createStatement();
                 statement.execute("CREATE DATABASE IF NOT EXISTS e3ms;");
                 statement.execute("USE e3ms;");
-                statement.execute("CREATE TABLE IF NOT EXISTS users (id VARCHAR(255), name VARCHAR(255), username VARCHAR(255), password VARCHAR(255)), identitykey VARCHAR(255), signedprekey VARCHAR(255), prekeysignature VARCHAR(255), otpkey1 VARCHAR(255), otpkey2 VARCHAR(255), otpkey3 VARCHAR(255), otpkey4 VARCHAR(255);");
-                statement.execute("CREATE TABLE IF NOT EXISTS messages (id VARCHAR(255), sender VARCHAR(255), receiver VARCHAR(255), timestamp VARCHAR(255), sharedSecret VARCHAR(255), message VARCHAR(7500));");
+                statement.execute("CREATE TABLE IF NOT EXISTS users (id VARCHAR(255), alias VARCHAR(255), username VARCHAR(255), password VARCHAR(255)), publicKey VARCHAR(256);");
+                statement.execute("CREATE TABLE IF NOT EXISTS messages (id VARCHAR(255), username VARCHAR(255), sender VARCHAR(255), receiver VARCHAR(255), timestamp VARCHAR(255), cipherText VARCHAR(10000), iv VARCHAR(255));");
                 loadState(dbConnection.createStatement());
             } catch (SQLException e) {
                 log.error("Failed to connect to database " + e.getMessage());
@@ -50,6 +47,7 @@ public class State {
         } else {
             activeUsers = new HashMap<>();
             activeMessages = new HashMap<>();
+            conversations = new HashMap<>();
         }
     }
 
@@ -67,38 +65,46 @@ public class State {
                         new Credentials(
                                 users.getString("username"),
                                 users.getString("password"),
-                                users.getString("identityKey"),
-                                users.getString("signedPreKey"),
-                                users.getString("preKeySignature"),
-                                new ArrayList<>() {
-                                    {
-                                        add(users.getString("otpKey1"));
-                                        add(users.getString("otpKey2"));
-                                        add(users.getString("otpKey3"));
-                                        add(users.getString("otpKey4"));
-                                    }
-                                }
+                                users.getString("publicKey")
                         ),
-                        users.getString("name"),
-                        users.getString("name")
+                        users.getString("id"),
+                        users.getString("alias")
                 );
                 user.setId(users.getString("id"));
                 activeUsers.put(user.getId(), user);
             }
 
-            ResultSet messages = statement.executeQuery("SELECT * FROM messages");
+            ResultSet messages = statement.executeQuery("SELECT * FROM messages ORDER BY timestamp ASC");
             while (messages.next()) {
                 Message message = new Message(
                         new Message.MetaData(
                                 messages.getString("id"),
+                                messages.getString("username"),
                                 messages.getString("sender"),
                                 List.of(messages.getString("receiver").split(",")),
-                                messages.getString("timestamp"),
-                                messages.getString("sharedSecret")
+                                messages.getString("timestamp")
                         ),
-                        new Message.MessageData(messages.getString("message"))
+                        new Message.MessageData(
+                                messages.getString("cipherText"),
+                                messages.getString("iv")
+                        )
                 );
                 activeMessages.put(message.getMetaData().getId(), message);
+            }
+
+            for (Message message: activeMessages.values()) {
+                Set<User> participants = new HashSet<>();
+                participants.add(getUserById(message.getMetaData().getSender()));
+                for (String receiverId: message.getMetaData().getReceiver()) {
+                    participants.add(getUserById(receiverId));
+                }
+                if (!conversations.containsKey(participants)) {
+                    conversations.put(participants, new Conversation(participants, new ArrayList<>() {{
+                        add(message);
+                    }}));
+                } else {
+                    conversations.get(participants).addMessage(message);
+                }
             }
         } else {
             log.info("Database is disabled, skipping loading state");
@@ -114,31 +120,13 @@ public class State {
      */
     public void addUser(User user) throws SQLException {
         if (Config.DB_ENABLED) {
-            String sql = "INSERT INTO users (id, name, username, password, identitykey, signedprekey, prekeysignature, otpkey1, otpkey2, otpkey3, otpkey4) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO users (id, alias, username, password, publicKey) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement statement = dbConnection.prepareStatement(sql);
             statement.setString(1, user.getId());
-            statement.setString(2, user.getName());
+            statement.setString(2, user.getAlias());
             statement.setString(3, user.getCredentials().getUsername());
             statement.setString(4, user.getCredentials().getPassword());
-            statement.setString(5, user.getCredentials().getIdentityKey());
-            statement.setString(6, user.getCredentials().getSignedPreKey());
-            statement.setString(7, user.getCredentials().getPreKeySignature());
-            statement.setString(
-                    8,
-                    user.getCredentials().getOneTimePreKeys().get(0) == null ? "" : user.getCredentials().getOneTimePreKeys().get(0)
-            );
-            statement.setString(
-                    9,
-                    user.getCredentials().getOneTimePreKeys().get(1) == null ? "" : user.getCredentials().getOneTimePreKeys().get(1)
-            );
-            statement.setString(
-                    10,
-                    user.getCredentials().getOneTimePreKeys().get(2) == null ? "" : user.getCredentials().getOneTimePreKeys().get(2)
-            );
-            statement.setString(
-                    11,
-                    user.getCredentials().getOneTimePreKeys().get(3) == null ? "" : user.getCredentials().getOneTimePreKeys().get(3)
-            );
+            statement.setString(5, user.getCredentials().getPublicKey());
             statement.executeUpdate();
         }
         activeUsers.put(user.getId(), user);
@@ -152,16 +140,29 @@ public class State {
      */
     public void addMessage(Message message) throws SQLException {
         if (Config.DB_ENABLED) {
-            String sql = "INSERT INTO messages (id, sender, receiver, timestamp, message) VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO messages (id, username, sender, receiver, timestamp, cipherText, iv) VALUES (?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement statement = dbConnection.prepareStatement(sql);
             statement.setString(1, message.getMetaData().getId());
-            statement.setString(2, message.getMetaData().getSender());
-            statement.setString(3, String.join(",", message.getMetaData().getReceiver())); // Assuming receiver is a list of strings
-            statement.setString(4, message.getMetaData().getTimestamp());
-            statement.setString(5, message.getMessageData().getMessage());
+            statement.setString(2, message.getMetaData().getUsername());
+            statement.setString(3, message.getMetaData().getSender());
+            statement.setString(4, String.join(",", message.getMetaData().getReceiver())); // Assuming receiver is a list of strings
+            statement.setString(5, message.getMetaData().getTimestamp());
+            statement.setString(6, message.getMessageData().getCipherText());
+            statement.setString(7, message.getMessageData().getIv());
             statement.executeUpdate();
         }
         activeMessages.put(message.getMetaData().getId(), message);
+        HashSet<User> participants = new HashSet<>();
+        for (String participantId: message.getParticipantIds()) {
+            participants.add(getUserById(participantId));
+        }
+        if (!conversations.containsKey(participants)) {
+            conversations.put(participants, new Conversation(participants, new ArrayList<>() {{
+                add(message);
+            }}));
+        } else {
+            conversations.get(participants).addMessage(message);
+        }
     }
 
     /**
@@ -191,7 +192,7 @@ public class State {
      */
     public List<Message> getMessagesBySender(User sender) {  // TODO perform credentials agreement checking
         if (Config.DB_ENABLED) {
-            String sql = "SELECT id, sender, receiver, timestamp, message FROM messages WHERE sender = ? ORDER BY timestamp DESC";
+            String sql = "SELECT id, username, sender, receiver, timestamp, iv, cipherText FROM messages WHERE sender = ? ORDER BY timestamp DESC";
             try {
                 PreparedStatement statement = dbConnection.prepareStatement(sql);
                 statement.setString(1, sender.getId());
@@ -201,12 +202,15 @@ public class State {
                     Message message = new Message(
                             new Message.MetaData(
                                     resultSet.getString("id"),
+                                    resultSet.getString("username"),
                                     resultSet.getString("sender"),
                                     List.of(resultSet.getString("receiver").split(",")),
-                                    resultSet.getString("timestamp"),
-                                    resultSet.getString("sharedSecret")
+                                    resultSet.getString("timestamp")
                             ),
-                            new Message.MessageData(resultSet.getString("message"))
+                            new Message.MessageData(
+                                    resultSet.getString("cipherText"),
+                                    resultSet.getString("iv")
+                            )
                     );
                     messages.add(message);
                 }
@@ -232,7 +236,7 @@ public class State {
      */
     public List<Message> getMessagesByReceiver(User receiver) { // TODO perform credentials agreement checking
         if (Config.DB_ENABLED) {
-            String sql = "SELECT id, sender, receiver, timestamp, message FROM messages WHERE FIND_IN_SET(?, receiver) ORDER BY timestamp DESC";
+            String sql = "SELECT id, username, sender, receiver, timestamp, iv, cipherText FROM messages WHERE FIND_IN_SET(?, receiver) ORDER BY timestamp DESC";
             try {
                 PreparedStatement statement = dbConnection.prepareStatement(sql);
                 statement.setString(1, receiver.getId());
@@ -242,12 +246,15 @@ public class State {
                     Message message = new Message(
                             new Message.MetaData(
                                     resultSet.getString("id"),
+                                    resultSet.getString("username"),
                                     resultSet.getString("sender"),
                                     List.of(resultSet.getString("receiver").split(",")),
-                                    resultSet.getString("timestamp"),
-                                    resultSet.getString("sharedSecret")
+                                    resultSet.getString("timestamp")
                             ),
-                            new Message.MessageData(resultSet.getString("message"))
+                            new Message.MessageData(
+                                    resultSet.getString("cipherText"),
+                                    resultSet.getString("iv")
+                            )
                     );
                     messages.add(message);
                 }
@@ -268,28 +275,31 @@ public class State {
     /**
      * Get the most recent messages.
      *
-     * @param user The user to get the messages for.
+     * @param userId The userId to get the messages for.
      * @param count The maximum number of messages to return.
      * @return The most recent messages.
      */
-    public List<Message> getRecentMessages(User user, int count) { // TODO perform credentials agreement checking
+    public List<Message> getRecentMessages(String userId, int count) { // TODO perform credentials agreement checking
         if (Config.DB_ENABLED) {
-            String sql = "SELECT id, sender, receiver, timestamp, message FROM messages WHERE FIND_IN_SET(?, receiver) ORDER BY timestamp DESC LIMIT " + count;
+            String sql = "SELECT id, username, sender, receiver, timestamp, cipherText FROM messages WHERE FIND_IN_SET(?, receiver) ORDER BY timestamp DESC LIMIT " + count;
             try {
                 PreparedStatement statement = dbConnection.prepareStatement(sql);
-                statement.setString(1, user.getId());
+                statement.setString(1, userId);
                 ResultSet resultSet = statement.executeQuery();
                 List<Message> messages = new ArrayList<>();
                 while (resultSet.next()) {
                     Message message = new Message(
                             new Message.MetaData(
                                     resultSet.getString("id"),
+                                    resultSet.getString("username"),
                                     resultSet.getString("sender"),
                                     List.of(resultSet.getString("receiver").split(",")),
-                                    resultSet.getString("timestamp"),
-                                    resultSet.getString("sharedSecret")
+                                    resultSet.getString("timestamp")
                             ),
-                            new Message.MessageData(resultSet.getString("message"))
+                            new Message.MessageData(
+                                    resultSet.getString("cipherText"),
+                                    resultSet.getString("iv")
+                            )
                     );
                     messages.add(message);
                 }
@@ -300,7 +310,7 @@ public class State {
         }
         List<Message> messages = new ArrayList<>();
         for (Message message : activeMessages.values()) {
-            if (message.getMetaData().getReceiver().contains(user.getId()) && count-- > 0) {
+            if (message.getMetaData().getReceiver().contains(userId) && count-- > 0) {
                 messages.add(message);
             } else if (count <= 0) {
                 break;
@@ -363,6 +373,11 @@ public class State {
             statement.setString(1, message.getMetaData().getId());
             statement.executeUpdate();
         }
+        HashSet<User> participants = new HashSet<>();
+        for (String participantId: message.getParticipantIds()) {
+            participants.add(getUserById(participantId));
+        }
+        conversations.get(participants).removeMessage(message);
         activeMessages.remove(message.getMetaData().getId());
     }
 
@@ -376,18 +391,12 @@ public class State {
         if (user != null) {
             if (Config.DB_ENABLED) {
                 try {
-                    String sql = "UPDATE users SET username = ?, password = ?, identitykey = ?, signedprekey = ?, prekeysignature = ?, otpkey1 = ?, otpkey2 = ?, otpkey3 = ?, otpkey4 = ? WHERE id = ?";
+                    String sql = "UPDATE users SET username = ?, password = ?, publicKey = ? WHERE id = ?";
                     PreparedStatement statement = dbConnection.prepareStatement(sql);
                     statement.setString(1, credentials.getUsername());
                     statement.setString(2, credentials.getPassword());
-                    statement.setString(3, credentials.getIdentityKey());
-                    statement.setString(4, credentials.getSignedPreKey());
-                    statement.setString(5, credentials.getPreKeySignature());
-                    statement.setString(6, credentials.getOneTimePreKeys().get(0));
-                    statement.setString(7, credentials.getOneTimePreKeys().get(1));
-                    statement.setString(8, credentials.getOneTimePreKeys().get(2));
-                    statement.setString(9, credentials.getOneTimePreKeys().get(3));
-                    statement.setString(10, userId);
+                    statement.setString(3, credentials.getPublicKey());
+                    statement.setString(4, userId);
                     statement.executeUpdate();
                 } catch (SQLException e) {
                     log.error("Failed to update credentials for user " + userId + " : " + e.getMessage());

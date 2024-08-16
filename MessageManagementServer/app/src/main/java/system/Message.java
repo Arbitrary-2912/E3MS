@@ -64,6 +64,16 @@ public class Message implements Comparable<Message> {
     }
 
     /**
+     * Gets the participants' ids of the message
+     * @return The participants of the message.
+     */
+    public List<String> getParticipantIds() {
+        List<String> participantIds = metaData.getReceiver();
+        participantIds.add(metaData.getSender());
+        return participantIds;
+    }
+
+    /**
      * Computes the hash code of the message.
      *
      * @return The hash code of the message.
@@ -79,29 +89,31 @@ public class Message implements Comparable<Message> {
     public static class MetaData {
         @SerializedName("id")
         private String id;
+        @SerializedName("username")
+        private String username;
         @SerializedName("sender")
         private String sender;
         @SerializedName("receiver")
         private List<String> receiver;
         @SerializedName("timestamp")
         private String timestamp;
-        @SerializedName("sharedSecret")
-        private String sharedSecret;
+
 
         /**
          * Constructor for the MetaData class.
          *
          * @param id        The id of the message.
+         * @param name      The name of the message.
          * @param sender    The sender of the message.
          * @param receiver  The receiver of the message.
          * @param timestamp The timestamp of the message.
          */
-        public MetaData(String id, String sender, List<String> receiver, String timestamp, String sharedSecret) {
+        public MetaData(String id, String username, String sender, List<String> receiver, String timestamp) {
             this.id = id;
+            this.username = username;
             this.sender = sender;
             this.receiver = receiver;
             this.timestamp = timestamp;
-            this.sharedSecret = sharedSecret;
         }
 
         /**
@@ -120,6 +132,24 @@ public class Message implements Comparable<Message> {
          */
         public void setId(String id) {
             this.id = id;
+        }
+
+        /**
+         * Gets the username of the message.
+         *
+         * @return The username of the message.
+         */
+        public String getUsername() {
+            return username;
+        }
+
+        /**
+         * Sets the username of the message.
+         *
+         * @param username The name of the message.
+         */
+        public void setUsername(String username) {
+            this.username = username;
         }
 
         /**
@@ -177,24 +207,6 @@ public class Message implements Comparable<Message> {
         }
 
         /**
-         * Gets the shared secret of the message.
-         *
-         * @return The shared secret of the message.
-         */
-        public String getSharedSecret() {
-            return sharedSecret;
-        }
-
-        /**
-         * Sets the shared secret of the message.
-         *
-         * @param sharedSecret The shared secret of the message.
-         */
-        public void setSharedSecret(String sharedSecret) {
-            this.sharedSecret = sharedSecret;
-        }
-
-        /**
          * Computes the hash code of the metadata.
          *
          * @return The hash code of the metadata.
@@ -208,43 +220,58 @@ public class Message implements Comparable<Message> {
      * Class that represents the data of a message.
      */
     public static class MessageData {
-        @SerializedName("message")
-        private String message;
+        @SerializedName("cipherText")
+        private String cipherText;
+
+        @SerializedName("iv")
+        private String iv;
+
 
         /**
          * Constructor for the MessageData class.
          *
-         * @param message The message data.
+         * @param cipherText The cipher text of the message.
+         * @param iv        The initialization vector of the message.
          */
-        public MessageData(String message) {
-            this.message = message;
+        public MessageData(String cipherText, String iv) {
+            this.cipherText = cipherText;
+            this.iv = iv;
         }
 
         /**
-         * Gets the message data.
+         * Gets the cipher text of the message.
          *
-         * @return The message data.
+         * @return The cipher text of the message.
          */
-        public String getMessage() {
-            return message;
+        public String getCipherText() {
+            return cipherText;
         }
 
         /**
-         * Sets the message data.
+         * Sets the cipher text of the message.
          *
-         * @param message The message data.
+         * @param cipherText The cipher text of the message.
          */
-        public void setMessage(String message) {
-            this.message = message;
+        public void setCipherText(String cipherText) {
+            this.cipherText = cipherText;
         }
 
         /**
-         * Computes the hash code of the message data.
+         * Gets the initialization vector of the message.
          *
-         * @return The hash code of the message data.
+         * @return The initialization vector of the message.
          */
-        public int hashCode() {
-            return message.hashCode();
+        public String getIv() {
+            return iv;
+        }
+
+        /**
+         * Sets the initialization vector of the message.
+         *
+         * @param iv The initialization vector of the message.
+         */
+        public void setIv(String iv) {
+            this.iv = iv;
         }
     }
 

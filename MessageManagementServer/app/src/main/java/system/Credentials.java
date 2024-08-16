@@ -2,9 +2,6 @@ package system;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.ArrayList;
-import java.util.Stack;
-
 /**
  * This class represents the credentials of a user.
  */
@@ -13,14 +10,8 @@ public class Credentials {
     private String username;
     @SerializedName("password")
     private String password;
-    @SerializedName("identityKey")
-    private String identityKey;
-    @SerializedName("signedPreKey")
-    private String signedPreKey;
-    @SerializedName("preKeySignature")
-    private String preKeySignature;
-    @SerializedName("oneTimePreKeys")
-    private ArrayList<String> oneTimePreKeys;
+    @SerializedName("publicKey")
+    private String publicKey;
 
     /**
      * Constructs a new Credentials object with the given username and password.
@@ -28,13 +19,10 @@ public class Credentials {
      * @param username the username
      * @param password the password
      */
-    public Credentials(String username, String password, String identityKey, String signedPreKey, String preKeySignature, ArrayList<String> oneTimePreKeys) {
+    public Credentials(String username, String password, String publicKey) {
         this.username = username;
         this.password = password;
-        this.identityKey = identityKey;
-        this.signedPreKey = signedPreKey;
-        this.preKeySignature = preKeySignature;
-        this.oneTimePreKeys = oneTimePreKeys;
+        this.publicKey = publicKey;
     }
 
     /**
@@ -56,38 +44,12 @@ public class Credentials {
     }
 
     /**
-     * Gets the identity key.
+     * Gets the public key.
      *
-     * @return the identity key
+     * @return the public key
      */
-    public String getIdentityKey() {
-        return identityKey;
+    public String getPublicKey() {
+        return publicKey;
     }
 
-    /**
-     * Gets the signed pre key.
-     *
-     * @return the signed pre key
-     */
-    public String getSignedPreKey() {
-        return signedPreKey;
-    }
-
-    /**
-     * Gets the pre key signature.
-     *
-     * @return the pre key signature
-     */
-    public String getPreKeySignature() {
-        return preKeySignature;
-    }
-
-    /**
-     * Gets the one time pre keys.
-     *
-     * @return the one time pre keys
-     */
-    public ArrayList<String> getOneTimePreKeys() {
-        return oneTimePreKeys;
-    }
 }

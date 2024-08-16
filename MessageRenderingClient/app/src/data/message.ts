@@ -6,34 +6,43 @@ export class Message {
         this.metaData = metaData;
         this.messageData = messageData;
     }
+
+    // Method to return an object suitable for sending to the server
+    toServerObject(): { metaData: MetaData, messageData: { ciphertext: string, iv: string } } {
+        return {
+            metaData: this.metaData,
+            messageData: {
+                ciphertext: this.messageData.cipherText,
+                iv: this.messageData.iv
+            }
+        };
+    }
 }
 
 export class MetaData {
     id: string;
+    username: string
     sender: string;
     receiver: string[];
     timestamp: string;
-    identityKey: string;
-    signedPreKey: string;
-    preKeySignature: string;
-    oneTimePreKeys: string[];
 
-    constructor(id: string, sender: string, receiver: string[], timestamp: string, identityKey: string, signedPreKey: string, preKeySignature: string, oneTimePreKeys: string[]) {
+    constructor(id: string, username: string, sender: string, receiver: string[], timestamp: string) {
         this.id = id;
+        this.username = username;
         this.sender = sender;
         this.receiver = receiver;
         this.timestamp = timestamp;
-        this.identityKey = identityKey;
-        this.signedPreKey = signedPreKey
-        this.preKeySignature = preKeySignature;
-        this.oneTimePreKeys = oneTimePreKeys;
     }
 }
 
 export class MessageData {
-    message: string;
+    cipherText: string;
+    iv: string;
+    decryptedMessage?: string; // Optional property for storing the decrypted message
 
-    constructor(message: string) {
-        this.message = message;
+    constructor(cipherText: string, iv: string, decryptedMessage?: string) {
+        this.cipherText = cipherText;
+        this.iv = iv;
+        this.decryptedMessage = decryptedMessage;
     }
 }

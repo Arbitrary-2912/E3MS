@@ -2,13 +2,12 @@ import { ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { verifyUsername } from './api/verifyusername';
 import { addUser } from './api/adduser.ts';
-import {base64ToUint8Array, Credentials, User} from './data/user.ts';
+import {Credentials, User} from './data/user.ts';
 import { useUser } from './UserContext';
 
 function SignIn() {
     const { username, password, setUsername, setPassword } = useUser();
     const navigate = useNavigate();
-
 
     const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
         setUsername(event.target.value);
@@ -21,29 +20,30 @@ function SignIn() {
     const handleLogIn = async () => {
         const isValidUser = await verifyUsername(username, password);
         if (isValidUser) {
-            navigate('/messages');
+            const loggedInUser = User.retrieveUserKeys();
+            if (loggedInUser) {
+                navigate('/messages', { state: { user: loggedInUser } });
+            }
         } else {
             alert('Invalid credentials');
         }
     };
 
     const handleSignUp = async () => {
-        const userCredentials = new Credentials(
-            username,
-            password,
-        );
-
-        // TODO - add check to make sure user id is unique
-
-        const newUser = await addUser(new User(userCredentials,  Math.random().toString(36).substring(7), username));
-
-        console.log('Decoded identity key:', base64ToUint8Array(userCredentials.identityKeyPair.publicKey));
-        if (newUser) {
-            navigate('/messages');
-        } else {
-            alert('Invalid credentials');
+        try {
+            const newUser = await User.createUser(Math.random().toString(36).substring(7), username, password);
+            const user = await addUser(newUser);
+            if (user) {
+                newUser.storeUserKeys();
+                navigate('/messages', { state: { user: newUser } });
+            } else {
+                alert('Invalid credentials');
+            }
+        } catch (error) {
+            alert('An error occurred during sign-up.');
         }
     };
+
 
     return (
         <div className="login-section">

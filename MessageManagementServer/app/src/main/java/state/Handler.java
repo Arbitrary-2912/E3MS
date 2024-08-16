@@ -123,118 +123,154 @@ public class Handler {
     private Request convertStringToMessage(String stream) {
         JsonObject obj = gson.fromJson(stream, JsonObject.class);
         return switch (obj.get("command").getAsString()) {
-            case "addUser" -> {
-                JsonObject user = (JsonObject) obj.get("user");
-                JsonObject userCredentials = (JsonObject) user.get("credentials");
-                yield new AddUserRequest(
-                        new User(
-                                new Credentials(
-                                        userCredentials.get("username").getAsString(),
-                                        userCredentials.get("password").getAsString(),
-                                        userCredentials.get("identityKey").getAsString(),
-                                        userCredentials.get("signedPreKey").getAsString(),
-                                        userCredentials.get("preKeySignature").getAsString(),
-                                        new ArrayList<>() {{
-                                            JsonArray oneTimePreKeys = (JsonArray) userCredentials.get("oneTimePreKeys");
-                                            for (int i = 0; i < oneTimePreKeys.size(); i++) {
-                                                add(oneTimePreKeys.get(i).getAsString());
-                                            }
-                                        }}
-                                ),
-                                user.get("id").getAsString(),
-                                user.get("name").getAsString()
-                        )
-                );
-            }
-            case "getUsers" -> {
-                yield new GetUsersRequest();
-            }
-            case "deleteUser" -> {
-                String userId = obj.get("userId").getAsString();
-                yield new DeleteUserRequest(userId);
-            }
-            case "addMessage" -> {
-                JsonObject messageContainer = (JsonObject) obj.get("message");
-                JsonObject metaDataContainer = (JsonObject) messageContainer.get("metaData");
-                JsonObject messageDataContainer = (JsonObject) messageContainer.get("messageData");
-
-                JsonArray receiverArray = (JsonArray) metaDataContainer.get("receiver");
-                ArrayList<String> receiverList = new ArrayList<>();
-                for (int i = 0; i < receiverArray.size(); i++) {
-                    receiverList.add(receiverArray.get(i).getAsString());
-                }
-
-                yield new AddMessageRequest(
-                        new Message(
-                                new Message.MetaData(
-                                        metaDataContainer.get("id").getAsString(),
-                                        metaDataContainer.get("sender").getAsString(),
-                                        receiverList,
-                                        metaDataContainer.get("timestamp").getAsString(),
-                                        metaDataContainer.get("sharedSecret").getAsString()
-                                ),
-                                new Message.MessageData(
-                                        messageDataContainer.get("message").getAsString()
-                                )
-                        )
-                );
-            }
-            case "getRecentMessages" -> {
-                JsonObject user = (JsonObject) obj.get("user");
-                JsonObject userCredentials = (JsonObject) user.get("credentials");
-                yield new GetRecentMessagesRequest(
-                        new User(
-                                new Credentials(
-                                        userCredentials.get("username").getAsString(),
-                                        userCredentials.get("password").getAsString(),
-                                        userCredentials.get("identityKey").getAsString(),
-                                        userCredentials.get("signedPreKey").getAsString(),
-                                        userCredentials.get("preKeySignature").getAsString(),
-                                        new ArrayList<>() {{
-                                            JsonArray oneTimePreKeys = (JsonArray) userCredentials.get("oneTimePreKeys");
-                                            for (int i = 0; i < oneTimePreKeys.size(); i++) {
-                                                add(oneTimePreKeys.get(i).getAsString());
-                                            }
-                                        }}
-                                ),
-                                user.get("id").getAsString(),
-                                user.get("name").getAsString()
-                        )
-                );
-            }
-            case "deleteMessage" -> {
-                JsonObject metaData = (JsonObject) obj.get("metaData");
-                yield new DeleteMessageRequest(metaData.get("id").getAsString());
-            }
-            case "updateCredentials" -> {
-                String userId = obj.get("userId").getAsString();
-                JsonObject userCredentials = (JsonObject) obj.get("credentials");
-                yield new UpdateCredentialsRequest(
-                        userId,
-                        new Credentials(
-                                userCredentials.get("username").getAsString(),
-                                userCredentials.get("password").getAsString(),
-                                userCredentials.get("identityKey").getAsString(),
-                                userCredentials.get("signedPreKey").getAsString(),
-                                userCredentials.get("preKeySignature").getAsString(),
-                                new ArrayList<>() {{
-                                    JsonArray oneTimePreKeys = (JsonArray) userCredentials.get("oneTimePreKeys");
-                                    for (int i = 0; i < oneTimePreKeys.size(); i++) {
-                                        add(oneTimePreKeys.get(i).getAsString());
-                                    }
-                                }}
-                        )
-                );
-            }
-            case "verifyPassword" -> {
-                yield new VerifyPasswordRequest(obj.get("userId").getAsString(), obj.get("password").getAsString());
-            }
+            case "addUser" -> handleAddUserRequest(obj);
+            case "getUsers" -> handleGetUsersRequest(obj);
+            case "deleteUser" -> handleDeleteUserRequest(obj);
+            case "addMessage" -> handleAddMessageRequest(obj);
+            case "getRecentMessages" -> handleGetRecentMessagesRequest(obj);
+            case "deleteMessage" -> handleDeleteMessageRequest(obj);
+            case "updateCredentials" -> handleUpdateCredentialsRequest(obj);
+            case "getPublicCredentials" -> handleGetPublicCredentialsRequest(obj);
+            case "verifyPassword" -> handleVerifyPasswordRequest(obj);
             default -> {
                 log.info("Command not recognized: " + obj.get("command").getAsString());
                 yield null;
             }
         };
     }
+
+    /**
+     * Handles an add user request.
+     * @param obj the JSON object
+     * @return the request
+     */
+    private Request handleAddUserRequest(JsonObject obj) {
+        JsonObject user = (JsonObject) obj.get("user");
+        JsonObject userCredentials = (JsonObject) user.get("credentials");
+        return new AddUserRequest(
+                new User(
+                        new Credentials(
+                                userCredentials.get("username").getAsString(),
+                                userCredentials.get("password").getAsString(),
+                                userCredentials.get("publicKey").getAsString()
+                        ),
+                        user.get("id").getAsString(),
+                        user.get("name").getAsString()
+                )
+        );
+    }
+
+    /**
+     * Handles a get users request.
+     * @param obj the JSON object
+     * @return the request
+     */
+    private Request handleGetUsersRequest(JsonObject obj) {
+        return new GetUsersRequest();
+    }
+
+    /**
+     * Handles a delete user request.
+     * @param obj the JSON object
+     * @return the request
+     */
+    private Request handleDeleteUserRequest(JsonObject obj) {
+        String userId = obj.get("userId").getAsString();
+        return new DeleteUserRequest(userId);
+    }
+
+    /**
+     * Handles an add message request.
+     * @param obj the JSON object
+     * @return the request
+     */
+    private Request handleAddMessageRequest(JsonObject obj) {
+        JsonObject messageContainer = (JsonObject) obj.get("message");
+        JsonObject metaDataContainer = (JsonObject) messageContainer.get("metaData");
+        JsonObject messageDataContainer = (JsonObject) messageContainer.get("messageData");
+
+        JsonArray receiverArray = (JsonArray) metaDataContainer.get("receiver");
+        ArrayList<String> receiverList = new ArrayList<>();
+        for (int i = 0; i < receiverArray.size(); i++) {
+            receiverList.add(receiverArray.get(i).getAsString());
+        }
+
+        return new AddMessageRequest(
+                new Message(
+                        new Message.MetaData(
+                                metaDataContainer.get("id").getAsString(),
+                                metaDataContainer.get("username").getAsString(),
+                                metaDataContainer.get("sender").getAsString(),
+                                receiverList,
+                                metaDataContainer.get("timestamp").getAsString()
+                        ),
+                        new Message.MessageData(
+                                messageDataContainer.get("ciphertext").getAsString(),
+                                messageDataContainer.get("iv").getAsString()
+                        )
+                )
+        );
+    }
+
+
+    /**
+     * Handles a get recent messages request.
+     * @param obj the JSON object
+     * @return the request
+     */
+    private Request handleGetRecentMessagesRequest(JsonObject obj) {
+        return new GetRecentMessagesRequest(obj.get("userId").getAsString());
+    }
+
+    /**
+     * Handles a delete message request.
+     * @param obj the JSON object
+     * @return the request
+     */
+    private Request handleDeleteMessageRequest(JsonObject obj) {
+        JsonObject metaData = (JsonObject) obj.get("metaData");
+        return new DeleteMessageRequest(metaData.get("id").getAsString());
+    }
+
+
+    /**
+     * Handles an update credentials request.
+     * @param obj the JSON object
+     * @return the request
+     */
+    private Request handleUpdateCredentialsRequest(JsonObject obj) {
+        String userId = obj.get("userId").getAsString();
+        JsonObject userCredentials = (JsonObject) obj.get("credentials");
+        return new UpdateCredentialsRequest(
+                userId,
+                new Credentials(
+                        userCredentials.get("username").getAsString(),
+                        userCredentials.get("password").getAsString(),
+                        userCredentials.get("publicKey").getAsString()
+                )
+        );
+    }
+
+
+    /**
+     * Handles a get public credentials request.
+     * @param obj the JSON object
+     * @return the request
+     */
+    private Request handleGetPublicCredentialsRequest(JsonObject obj) {
+        return new GetPublicCredentialsRequest(obj.get("userId").getAsString());
+    }
+
+
+    /**
+     * Handles a verify password request.
+     * @param obj the JSON object
+     * @return the request
+     */
+    private Request handleVerifyPasswordRequest(JsonObject obj) {
+        return new VerifyPasswordRequest(obj.get("userId").getAsString(), obj.get("password").getAsString());
+    }
+
 
     /**
      * Converts a response to a string.

@@ -1,6 +1,7 @@
 package response;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import state.State;
@@ -36,6 +37,8 @@ public class GetUsersResponse implements Response {
     @Override
     public String response() {
         var result = state.getUsers();
-        return gson.toJson(result);
+        JsonArray users = new JsonArray();
+        result.forEach(user -> users.add(gson.toJsonTree(user)));
+        return gson.toJson(users);
     }
 }

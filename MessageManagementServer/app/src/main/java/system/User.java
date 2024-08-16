@@ -9,24 +9,23 @@ import com.google.gson.annotations.SerializedName;
  * The name is the user's display name.
  */
 public class User {
-    @SerializedName("credentials")
     private Credentials credentials;
     @SerializedName("id")
     private String id;
     @SerializedName("name")
-    private String name;
+    private String alias;
 
     /**
      * Constructs a user with the given credentials, id, and name.
      *
      * @param credentials the user's credentials
      * @param id          the user's id
-     * @param name        the user's name
+     * @param alias        the user's name
      */
-    public User(Credentials credentials, String id, String name) {
+    public User(Credentials credentials, String id, String alias) {
         this.credentials = credentials;
         this.id = id;
-        this.name = name;
+        this.alias = alias;
     }
 
     /**
@@ -70,16 +69,16 @@ public class User {
      *
      * @return the user's name
      */
-    public String getName() {
-        return name;
+    public String getAlias() {
+        return alias;
     }
 
     /**
      * Sets the user's name.
      *
-     * @param name the user's name
+     * @param alias the user's name
      */
-    public void setName(String name) {
-        this.name = name;
+    public void setAlias(String alias) {
+        this.alias = alias;
     }
 }
