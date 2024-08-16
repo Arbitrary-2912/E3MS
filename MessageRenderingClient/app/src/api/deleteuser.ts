@@ -1,7 +1,8 @@
 import axios from "axios";
+import {baseEndpoint} from "./apiconfig.ts";
 
 export const deleteUser = (userId: string) => {
-    axios.post('http://localhost:8080/', {
+    axios.post(baseEndpoint, {
         command: "deleteUser",
         userId: userId
     })

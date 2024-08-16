@@ -1,7 +1,8 @@
 import axios from "axios";
+import {baseEndpoint} from "./apiconfig.ts";
 
 export const verifyUsername = (username: string, password: string) : Promise<boolean> => {
-    return axios.post('http://localhost:8080/', {
+    return axios.post(baseEndpoint, {
         command: "verifyPassword",
         userId: username,
         password: password
