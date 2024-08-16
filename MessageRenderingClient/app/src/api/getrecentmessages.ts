@@ -1,10 +1,11 @@
 import axios from "axios";
 import {Message, MessageData, MetaData} from "../data/message.ts";
 import {InitServerInfo} from "rawr-x3dh";
+import {baseEndpoint} from "./apiconfig.ts";
 
 export const getRecentMessages = async (userId: string): Promise<Message[]> => {
     try {
-        const response = await axios.post('http://localhost:8080/', {
+        const response = await axios.post(baseEndpoint, {
             command: "getRecentMessages",
             userId: userId
         });

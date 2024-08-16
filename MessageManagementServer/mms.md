@@ -10,5 +10,16 @@ To setup and run the MMS, you need to have the following installed on your machi
 
 Alternatively, you can utilize the docker containers provided in the `docker-compose.yml` file. To run the MMS using docker, run the following command:
 ```bash
-$ docker-compose up -d  # Run the MMS in the background
+$ docker load -i e3ms.tar  # Load the docker image
+$ docker run -dp 127.0.0.1:8080:8080 e3ms  # Run the MMS in the background
+```
+
+To build the container run:
+```bash
+$ docker build -t e3ms .
+```
+
+To stop the MMS, run the following command:
+```bash
+$ docker stop $(docker ps -q --filter ancestor=e3ms)
 ```

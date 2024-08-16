@@ -1,8 +1,9 @@
 import axios from "axios";
+import {baseEndpoint} from "./apiconfig.ts";
 
 export const getPublicCredentials = async (userId: string) => {
     try {
-        const response = await axios.post('http://localhost:8080/', {
+        const response = await axios.post(baseEndpoint, {
             command: "getPublicCredentials",
             userId: userId
         })

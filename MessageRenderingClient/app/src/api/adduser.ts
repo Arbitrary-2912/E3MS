@@ -1,12 +1,13 @@
 import axios from 'axios';
 import { User } from '../data/user';
 import { Credentials } from '../data/user.ts';
+import {baseEndpoint} from "./apiconfig.ts";
 
 export const addUser = async (user: User): Promise<boolean> => {
     try {
         const publicUserInfo = await getPublicInfo(user);
 
-        const response = await axios.post('http://localhost:8080/', {
+        const response = await axios.post(baseEndpoint, {
             command: "addUser",
             user: publicUserInfo
         });
